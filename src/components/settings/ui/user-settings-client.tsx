@@ -58,7 +58,15 @@ export function UserSettingsClient() {
     );
   }
 
-  if (!session?.user) return null;
+  if (!session?.user) {
+    return (
+      <Card className="border-0 shadow-md bg-card/50">
+        <CardContent className="h-[200px] flex items-center justify-center text-muted-foreground">
+          Unable to load user profile.
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

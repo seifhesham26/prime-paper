@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { api } from "@/trpc/react";
 import {
   Select,
   SelectContent,
@@ -14,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserPlus, Loader2, Check, ShieldCheck, Eye } from "lucide-react";
+import { UserPlus, Loader2, Check, ShieldCheck, Eye, KeyRound } from "lucide-react";
 
 export function InviteClient() {
   const t = useTranslations("invite");
@@ -52,99 +54,191 @@ export function InviteClient() {
   };
 
   return (
-    <div className="max-w-lg animate-in fade-in duration-500">
-      <Card className="border-0 shadow-md bg-card/50">
-        <CardHeader className="bg-muted/30 border-b border-muted">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <UserPlus className="h-5 w-5 text-muted-foreground" />
-            {t("title")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-muted-foreground">{t("name")}</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="bg-muted/50 focus-visible:ring-primary/50 transition-shadow"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-muted-foreground">{t("email")}</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                dir="ltr"
-                className="bg-muted/50 focus-visible:ring-primary/50 transition-shadow"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-muted-foreground">{t("password")}</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                dir="ltr"
-                minLength={8}
-                className="bg-muted/50 focus-visible:ring-primary/50 transition-shadow"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-muted-foreground">{t("role")}</Label>
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger className="bg-muted/50 focus-visible:ring-primary/50 transition-shadow">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                      {t("admin")}
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="viewer">
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-blue-600" />
-                      {t("viewer")}
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+    <div className="max-w-lg w-full mx-auto animate-in fade-in duration-500">
+      <Tabs defaultValue="create" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="create">Create User</TabsTrigger>
+          <TabsTrigger value="resets">Password Resets</TabsTrigger>
+        </TabsList>
 
-            <div className="pt-2">
-              {error && (
-                <div className="mb-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg py-3 px-4 flex items-center gap-2 shadow-sm animate-in zoom-in-95">
-                  {error}
+        <TabsContent value="create" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+          <Card className="border-0 shadow-xl bg-background/60 backdrop-blur-sm">
+            <CardHeader className="bg-muted/30 border-b border-muted">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <UserPlus className="h-5 w-5 text-muted-foreground" />
+                {t("title")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-muted-foreground">{t("name")}</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="bg-muted/50 focus-visible:ring-primary/50 transition-shadow"
+                  />
                 </div>
-              )}
-              {success && (
-                <div className="mb-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg py-3 px-4 flex items-center gap-2 shadow-sm animate-in zoom-in-95 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400">
-                  <Check className="h-4 w-4" />
-                  {t("success")}
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-muted-foreground">{t("email")}</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    dir="ltr"
+                    className="bg-muted/50 focus-visible:ring-primary/50 transition-shadow"
+                  />
                 </div>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-muted-foreground">{t("password")}</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    dir="ltr"
+                    minLength={8}
+                    className="bg-muted/50 focus-visible:ring-primary/50 transition-shadow"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">{t("role")}</Label>
+                  <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger className="bg-muted/50 focus-visible:ring-primary/50 transition-shadow">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                          {t("admin")}
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="viewer">
+                        <div className="flex items-center gap-2">
+                          <Eye className="h-4 w-4 text-blue-600" />
+                          {t("viewer")}
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <Button type="submit" disabled={loading} className="w-full gap-2 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <UserPlus className="h-4 w-4" />
-                )}
-                {t("submit")}
-              </Button>
-            </div>
-          </form>
+                <div className="pt-2">
+                  {error && (
+                    <div className="mb-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg py-3 px-4 flex items-center gap-2 shadow-sm animate-in zoom-in-95">
+                      {error}
+                    </div>
+                  )}
+                  {success && (
+                    <div className="mb-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg py-3 px-4 flex items-center gap-2 shadow-sm animate-in zoom-in-95 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400">
+                      <Check className="h-4 w-4" />
+                      {t("success")}
+                    </div>
+                  )}
+
+                  <Button type="submit" disabled={loading} className="w-full gap-2 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <UserPlus className="h-4 w-4" />
+                    )}
+                    {t("submit")}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="resets" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+          <PasswordResetsTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function PasswordResetsTab() {
+  const { data: requests, isLoading } = api.users.getPendingResets.useQuery();
+  const utils = api.useUtils();
+  const resolveMutation = api.users.resolveReset.useMutation({
+    onSuccess: () => utils.users.getPendingResets.invalidate()
+  });
+
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [passwords, setPasswords] = useState<Record<string, string>>({});
+
+  const handleResolve = async (id: string, email: string) => {
+    const newPassword = passwords[id];
+    if (!newPassword || newPassword.length < 8) return alert("Password must be 8+ chars");
+    setLoadingId(id);
+    
+    try {
+      // Find user by email manually via listUsers (admin)
+      const usersRes = await authClient.admin.listUsers({ query: { limit: 1000 } });
+      const users = usersRes.data?.users || [];
+      const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      
+      if (user) {
+        // Set new password
+        await authClient.admin.updateUser({
+          userId: user.id,
+          data: { password: newPassword }
+        });
+      }
+      
+      // Mark as resolved in our tickets DB
+      resolveMutation.mutate({ id });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to reset password: " + (err instanceof Error ? err.message : "Unknown error"));
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  if (isLoading) return <div className="py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div>;
+  if (!requests?.length) {
+    return (
+      <Card className="border-dashed shadow-none bg-transparent">
+        <CardContent className="flex flex-col items-center justify-center p-12 text-muted-foreground">
+           <KeyRound className="h-8 w-8 mb-4 opacity-50" />
+           <p>No pending password resets.</p>
         </CardContent>
       </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {requests.map((req) => (
+        <Card key={req.id} className="bg-card w-full shadow-sm border border-border/50 animate-in slide-in-from-bottom-2">
+          <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div>
+              <p className="font-medium text-sm">{req.email}</p>
+              <p className="text-xs text-muted-foreground">Requested on: {new Date(req.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+              <Input 
+                type="text" 
+                placeholder="New Password" 
+                value={passwords[req.id] || ""}
+                onChange={(e) => setPasswords({...passwords, [req.id]: e.target.value})}
+                className="w-full sm:w-[150px] h-9 text-sm focus-visible:ring-primary/50"
+              />
+              <Button size="sm" onClick={() => handleResolve(req.id, req.email)} disabled={loadingId === req.id || !passwords[req.id] || passwords[req.id].length < 8}>
+                {loadingId === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resolve"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

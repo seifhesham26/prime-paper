@@ -174,3 +174,12 @@ export const payments = pgTable("payments", {
   createdBy: text("created_by").references(() => user.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// ─── Manual Password Reset Requests ──────────────────────
+export const resetRequests = pgTable("reset_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull(),
+  status: text("status", { enum: ["pending", "resolved"] }).notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
