@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip auth check for login page and API routes
-  if (pathname.startsWith("/auth") || pathname.startsWith("/api")) {
+  // Skip auth check for landing page, login page and API routes
+  if (pathname === "/" || pathname.startsWith("/auth") || pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 

@@ -19,4 +19,18 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [admin(), dash()],
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          return {
+            data: {
+              ...user,
+              role: "dev",
+            },
+          };
+        },
+      },
+    },
+  },
 });

@@ -2,16 +2,41 @@
 
 This document serves as a comprehensive user manual and development reference for the **Prime Paper Company** web application. It describes every page, function, and feature available in the system.
 
-## 1. Dashboard
+## 1. Landing Page
 **Path:** `/`
-**Component:** `DashboardClient`
+**Component:** `LandingPage`
 
-The Dashboard is the central hub providing a high-level overview of the company's financial and operational status.
+The Landing Page is the public face of Prime Paper Company. It is accessible to everyone without logging in.
 
 ### Features
-- **Top Unpaid Companies:** Lists companies with outstanding balances. Displays company name and total outstanding balance in EGP. Provides a direct link to view all companies.
-- **Revenue vs. Payments Bar Chart:** Visually represents total revenue alongside total payments received, tracked month by month using a bar chart (via Recharts).
-- **Recent Deliveries Table:** A quick view of the most recent shipments. Displays the company name, delivery date, total selling price (EGP), and a color-coded payment status badge (Paid, Partial, Unpaid). Includes a link to view all deliveries.
+- **Hero Section**: A high-impact introduction to the system's core value proposition.
+- **Get Started CTA**: Redirects new users to the Signup page.
+- **View Dashboard**: Smarlty detects if a user is already logged in and provides a direct link to the app dashboard.
+
+---
+
+## 2. Dashboard
+**Path:** `/dashboard`
+**Component:** `DashboardClient`
+
+The Dashboard is the central hub for authenticated users, providing a high-level overview of the company's financial and operational status.
+
+### Features
+- **Top Unpaid Companies:** Lists companies with outstanding balances. Displays company name and total outstanding balance in EGP.
+- **Revenue vs. Payments Bar Chart:** Visually represents total revenue alongside total payments received, tracked month by month.
+- **Recent Deliveries Table:** A quick view of the most recent shipments. Includes a link to view all deliveries.
+
+---
+
+## 3. Authentication
+**Paths:** `/auth/login`, `/auth/signup`, `/auth/forgot-password`
+
+The system provides a complete authentication suite.
+
+### Features
+- **Public Signup**: Allows new staff to create accounts. By default, new signups are granted the `dev` role for development purposes.
+- **Secure Login**: Standard email/password entry.
+- **Manual Forgot Password**: Instead of automated emails, users submit a "Reset Request" which is tracked globally as a ticket for administrators to resolve manually.
 
 ---
 
@@ -106,19 +131,20 @@ A configuration page for application-level preferences.
 
 ---
 
-## 7. Invite Users
+## 8. Admin Portal (Invite & Resets)
 **Path:** `/invite`
-**Component:** `InviteClient` (inside page wrapper `InvitePage`)
+**Component:** `InviteClient`
 
-An administrative panel for adding new team members to the application. Access to this page is restricted (only users with the role `dev` can visit this route).
+An administrative suite for managing the platform's team and security. Restricted to `dev` and `admin` roles.
 
-### Features & Operations
+### Tab 1: Invite User
 - **Create User Form:** 
-  - `Name` (Required text)
-  - `Email` (Required email format)
-  - `Password` (Required password, minimum 8 characters)
-  - `Role` (Dropdown to assign permissions: **Admin** or **Viewer**)
-- **Under the Hood:** Utilizes `authClient.admin.createUser` to handle the identity generation securely. Displays conditional success or error banners based on the mutation outcome.
+  - `Name`, `Email`, `Password`, and `Role` (**Admin** or **Viewer**).
+- **Functionality:** Securely creates the user profile in the database via Better Auth Admin API.
+
+### Tab 2: Password Resets
+- **Ticket Queue:** Displays all pending password reset requests from the public "Forgot Password" page.
+- **Manual Resolution:** Admins can enter a new password for the user, update the credential via the Admin API, and mark the ticket as resolved.
 
 ---
 

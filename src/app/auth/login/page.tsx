@@ -13,7 +13,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { ScrollText, Loader2 } from "lucide-react";
+import { ScrollText, Loader2, UserPlus } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -91,13 +92,24 @@ export default function LoginPage() {
                 {error}
               </p>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full gap-2" disabled={loading}>
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                t("submit")
+                <>
+                  {t("submit")}
+                  <UserPlus className="h-4 w-4" />
+                </>
               )}
             </Button>
+            <div className="text-center pt-2">
+               <p className="text-sm text-muted-foreground">
+                  {t("dontHaveAccount")}{" "}
+                  <Link href="/auth/signup" className="text-primary font-medium hover:underline">
+                    {t("signup")}
+                  </Link>
+               </p>
+            </div>
           </form>
         </CardContent>
       </Card>

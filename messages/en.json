@@ -147,10 +147,24 @@
   },
   "auth": {
     "login": "Login",
+    "signup": "Sign Up",
+    "name": "Full Name",
     "email": "Email",
     "password": "Password",
     "submit": "Sign In",
-    "error": "Invalid email or password"
+    "signupSubmit": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "signupSuccess": "Account created successfully!",
+    "error": "Invalid email or password",
+    "signupError": "Failed to create account"
+  },
+  "landing": {
+    "title": "Modern Factory Management",
+    "description": "Streamline your paper production, inventory, and deliveries with the industry's most advanced management suite.",
+    "getStarted": "Get Started",
+    "viewDashboard": "View Dashboard",
+    "heroTagline": "Efficiency, Redefined."
   },
   "common": {
     "loading": "Loading...",

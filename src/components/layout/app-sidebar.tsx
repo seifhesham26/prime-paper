@@ -28,7 +28,7 @@ import {
 import { signOut, useSession } from "@/lib/auth-client";
 
 const navItems = [
-  { href: "/", icon: LayoutDashboard, labelKey: "dashboard" as const },
+  { href: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" as const },
   { href: "/raw-materials", icon: Package, labelKey: "rawMaterials" as const },
   { href: "/products", icon: Factory, labelKey: "products" as const },
   { href: "/companies", icon: Building2, labelKey: "companies" as const },
@@ -66,10 +66,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => {
-                const isActive =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(item.href);
+                const isActive = pathname === item.href;
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive}>
