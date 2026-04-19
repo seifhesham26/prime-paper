@@ -1,16 +1,14 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, publicProcedure, writerProcedure } from "../trpc";
 import { eq, desc } from "drizzle-orm";
-import { resetRequests } from "@/db/schema";
+import { resetRequests, user } from "@/db/schema";
 import { db } from "@/db";
-import { auth } from "@/lib/auth";
-import { TRPCError } from "@trpc/server";
 
 export const usersRouter = createTRPCRouter({
+  // Public — anyone can submit a password reset request (even unauthenticated)
   requestReset: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
-      // Create a pending request
       await db.insert(resetRequests).values({
         email: input.email.toLowerCase(),
         status: "pending",
@@ -18,31 +16,35 @@ export const usersRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  getPendingResets: publicProcedure.query(async ({ ctx }) => {
-    const session = await auth.api.getSession({ headers: ctx.headers });
-    if (!session?.user || (session.user.role !== "dev" && session.user.role !== "admin")) {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    }
-    
+  // Admin only — view pending reset tickets
+  getPendingResets: writerProcedure.query(async () => {
     return db.query.resetRequests.findMany({
       where: eq(resetRequests.status, "pending"),
       orderBy: [desc(resetRequests.createdAt)],
     });
   }),
 
-  resolveReset: publicProcedure
+  // Admin only — mark a reset ticket as resolved
+  resolveReset: writerProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ ctx, input }) => {
-      const session = await auth.api.getSession({ headers: ctx.headers });
-      if (!session?.user || (session.user.role !== "dev" && session.user.role !== "admin")) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
+    .mutation(async ({ input }) => {
       await db
         .update(resetRequests)
         .set({ status: "resolved", updatedAt: new Date() })
         .where(eq(resetRequests.id, input.id));
 
       return { success: true };
+    }),
+
+  // Admin only — look up a single user ID by email (replaces client-side listUsers)
+  getUserIdByEmail: writerProcedure
+    .input(z.object({ email: z.string().email() }))
+    .query(async ({ input }) => {
+      const result = await db
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.email, input.email.toLowerCase()))
+        .limit(1);
+      return result[0] ?? null;
     }),
 });

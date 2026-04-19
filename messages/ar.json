@@ -10,7 +10,10 @@
     "companies": "الشركات",
     "deliveries": "التسليمات",
     "settings": "الإعدادات",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "invite": "دعوة مستخدم",
+    "brandName": "برايم بيبر",
+    "brandSub": "إدارة المصنع"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -53,6 +56,7 @@
     "save": "حفظ",
     "cancel": "إلغاء",
     "noData": "لا توجد مواد خام بعد",
+    "emptyStateDesc": "أضف أول شحنة مواد خام واردة.",
     "confirmDelete": "هل أنت متأكد من حذف هذه المادة الخام؟"
   },
   "products": {
@@ -71,6 +75,7 @@
     "save": "حفظ",
     "cancel": "إلغاء",
     "noData": "لا توجد منتجات بعد",
+    "emptyStateDesc": "أضف أول منتج إلى المخزون.",
     "selectRawMaterial": "اختر المادة الخام",
     "confirmDelete": "هل أنت متأكد من حذف هذا المنتج؟"
   },
@@ -88,6 +93,7 @@
     "save": "حفظ",
     "cancel": "إلغاء",
     "noData": "لا توجد شركات بعد",
+    "emptyStateDesc": "أضف أول شركة للبدء.",
     "confirmDelete": "هل أنت متأكد من حذف هذه الشركة؟"
   },
   "deliveries": {
@@ -111,6 +117,11 @@
     "save": "حفظ",
     "cancel": "إلغاء",
     "noData": "لا توجد تسليمات بعد",
+    "emptyStateDesc": "أنشئ أول تسليم للبدء.",
+    "emptyItems": "لا توجد منتجات مضافة لهذا التسليم بعد.",
+    "emptyPayments": "لا توجد مدفوعات مسجلة.",
+    "deliveryNotFound": "لم يتم العثور على التسليم",
+    "backToDeliveries": "العودة للتسليمات",
     "payments": "المدفوعات",
     "addPayment": "إضافة دفعة",
     "amount": "المبلغ (ج.م)",
@@ -124,10 +135,17 @@
     "password": "كلمة المرور",
     "role": "الصلاحية",
     "admin": "مدير",
-    "viewer": "مشاهد",
+    "user": "مستخدم (عرض فقط)",
     "submit": "إنشاء المستخدم",
     "success": "تم إنشاء المستخدم بنجاح",
-    "error": "فشل في إنشاء المستخدم"
+    "error": "فشل في إنشاء المستخدم",
+    "createUser": "إنشاء مستخدم",
+    "passwordResets": "إعادة تعيين كلمات المرور",
+    "passwordMinLength": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+    "resetFailed": "فشل في إعادة تعيين كلمة المرور",
+    "noPendingResets": "لا توجد طلبات إعادة تعيين معلقة.",
+    "newPassword": "كلمة المرور الجديدة",
+    "resolve": "حل"
   },
   "settings": {
     "title": "الإعدادات",
@@ -135,6 +153,9 @@
     "arabic": "العربية",
     "english": "English",
     "account": "الحساب",
+    "systemAndLanguage": "النظام واللغة",
+    "systemLanguage": "لغة النظام",
+    "systemLanguageDesc": "اختر لغتك المفضلة للواجهة.",
     "profileInfo": "معلومات الملف الشخصي",
     "name": "الاسم",
     "email": "البريد الإلكتروني",
@@ -143,7 +164,36 @@
     "newPassword": "كلمة المرور الجديدة",
     "updatePassword": "تحديث كلمة المرور",
     "passwordUpdated": "تم تحديث كلمة المرور بنجاح",
-    "passwordError": "فشل تحديث كلمة المرور"
+    "passwordError": "فشل تحديث كلمة المرور",
+    "unableToLoadProfile": "تعذر تحميل الملف الشخصي.",
+    "systemConfig": "إعدادات النظام",
+    "systemConfigDesc": "إدارة الإعدادات التشغيلية التي تتحكم في سلوك النظام.",
+    "settingKey": "الإعداد",
+    "settingValue": "القيمة",
+    "category": "الفئة",
+    "save": "حفظ",
+    "saved": "تم الحفظ",
+    "saving": "جاري الحفظ...",
+    "dashboardCards": "بطاقات لوحة التحكم",
+    "dashboardCardsDesc": "إعداد بطاقات الإحصائيات المعروضة على لوحة التحكم.",
+    "addCard": "إضافة بطاقة",
+    "editCard": "تعديل البطاقة",
+    "deleteCard": "حذف البطاقة",
+    "cardTitle": "العنوان (إنجليزي)",
+    "cardTitleAr": "العنوان (عربي)",
+    "cardEquation": "المعادلة",
+    "cardUnit": "الوحدة",
+    "cardIcon": "الأيقونة",
+    "cardGradient": "اللون",
+    "cardVisible": "مرئي",
+    "noCards": "لا توجد بطاقات لوحة تحكم.",
+    "confirmDeleteCard": "هل أنت متأكد من حذف هذه البطاقة؟",
+    "addVariable": "إضافة متغير",
+    "operators": "العمليات",
+    "preview": "معاينة",
+    "moveUp": "تحريك للأعلى",
+    "moveDown": "تحريك للأسفل",
+    "manageCards": "إدارة البطاقات"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -157,7 +207,14 @@
     "dontHaveAccount": "ليس لديك حساب؟",
     "signupSuccess": "تم إنشاء الحساب بنجاح!",
     "error": "بريد إلكتروني أو كلمة مرور غير صحيحة",
-    "signupError": "فشل إنشاء الحساب"
+    "signupError": "فشل إنشاء الحساب",
+    "forgotPasswordTitle": "نسيت كلمة المرور",
+    "forgotPasswordDesc": "أدخل بريدك الإلكتروني وسنرسل طلب إعادة تعيين للمسؤول.",
+    "sendResetLink": "إرسال طلب إعادة التعيين",
+    "checkEmail": "تم إرسال طلبك. سيقوم المسؤول بإعادة تعيين كلمة المرور.",
+    "backToLogin": "العودة لتسجيل الدخول",
+    "brandTitle": "برايم بيبر | Prime Paper",
+    "brandDesc": "نظام إدارة مصنع الورق"
   },
   "landing": {
     "title": "إدارة المصنع الحديثة",
@@ -177,6 +234,9 @@
     "total": "الإجمالي",
     "previous": "السابق",
     "next": "التالي",
-    "page": "صفحة"
+    "page": "صفحة",
+    "egp": "ج.م",
+    "tons": "طن",
+    "kg": "كجم"
   }
 }

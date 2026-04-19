@@ -23,7 +23,7 @@ export function InviteClient() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("viewer");
+  const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -45,7 +45,7 @@ export function InviteClient() {
       setName("");
       setEmail("");
       setPassword("");
-      setRole("viewer");
+      setRole("user");
     } catch {
       setError(t("error"));
     } finally {
@@ -57,8 +57,8 @@ export function InviteClient() {
     <div className="max-w-lg w-full mx-auto animate-in fade-in duration-500">
       <Tabs defaultValue="create" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="create">Create User</TabsTrigger>
-          <TabsTrigger value="resets">Password Resets</TabsTrigger>
+          <TabsTrigger value="create">{t("createUser")}</TabsTrigger>
+          <TabsTrigger value="resets">{t("passwordResets")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="create" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
@@ -119,10 +119,10 @@ export function InviteClient() {
                           {t("admin")}
                         </div>
                       </SelectItem>
-                      <SelectItem value="viewer">
+                      <SelectItem value="user">
                         <div className="flex items-center gap-2">
                           <Eye className="h-4 w-4 text-blue-600" />
-                          {t("viewer")}
+                          {t("user")}
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -165,6 +165,7 @@ export function InviteClient() {
 }
 
 function PasswordResetsTab() {
+  const t = useTranslations("invite");
   const { data: requests, isLoading } = api.users.getPendingResets.useQuery();
   const utils = api.useUtils();
   const resolveMutation = api.users.resolveReset.useMutation({
@@ -176,19 +177,17 @@ function PasswordResetsTab() {
 
   const handleResolve = async (id: string, email: string) => {
     const newPassword = passwords[id];
-    if (!newPassword || newPassword.length < 8) return alert("Password must be 8+ chars");
+    if (!newPassword || newPassword.length < 8) return alert(t("passwordMinLength"));
     setLoadingId(id);
     
     try {
-      // Find user by email manually via listUsers (admin)
-      const usersRes = await authClient.admin.listUsers({ query: { limit: 1000 } });
-      const users = usersRes.data?.users || [];
-      const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      // Look up user by email via targeted server-side query
+      const found = await utils.users.getUserIdByEmail.fetch({ email });
       
-      if (user) {
+      if (found) {
         // Set new password
         await authClient.admin.updateUser({
-          userId: user.id,
+          userId: found.id,
           data: { password: newPassword }
         });
       }
@@ -197,7 +196,7 @@ function PasswordResetsTab() {
       resolveMutation.mutate({ id });
     } catch (err) {
       console.error(err);
-      alert("Failed to reset password: " + (err instanceof Error ? err.message : "Unknown error"));
+      alert(t("resetFailed") + ": " + (err instanceof Error ? err.message : ""));
     } finally {
       setLoadingId(null);
     }
@@ -209,7 +208,7 @@ function PasswordResetsTab() {
       <Card className="border-dashed shadow-none bg-transparent">
         <CardContent className="flex flex-col items-center justify-center p-12 text-muted-foreground">
            <KeyRound className="h-8 w-8 mb-4 opacity-50" />
-           <p>No pending password resets.</p>
+           <p>{t("noPendingResets")}</p>
         </CardContent>
       </Card>
     );
@@ -226,14 +225,14 @@ function PasswordResetsTab() {
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
               <Input 
-                type="text" 
-                placeholder="New Password" 
+                type="password" 
+                placeholder={t("newPassword")} 
                 value={passwords[req.id] || ""}
                 onChange={(e) => setPasswords({...passwords, [req.id]: e.target.value})}
                 className="w-full sm:w-[150px] h-9 text-sm focus-visible:ring-primary/50"
               />
               <Button size="sm" onClick={() => handleResolve(req.id, req.email)} disabled={loadingId === req.id || !passwords[req.id] || passwords[req.id].length < 8}>
-                {loadingId === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resolve"}
+                {loadingId === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t("resolve")}
               </Button>
             </div>
           </CardContent>

@@ -5,6 +5,7 @@ import { deliveriesRouter } from "./deliveries/router";
 import { productsRouter } from "./products/router";
 import { rawMaterialsRouter } from "./raw-materials/router";
 import { usersRouter } from "./users/router";
+import { settingsRouter } from "./settings/router";
 
 export const appRouter = createTRPCRouter({
   analytics: analyticsRouter,
@@ -13,6 +14,7 @@ export const appRouter = createTRPCRouter({
   products: productsRouter,
   rawMaterials: rawMaterialsRouter,
   users: usersRouter,
+  settings: settingsRouter,
 });
 
 export type AppRouter = typeof appRouter;

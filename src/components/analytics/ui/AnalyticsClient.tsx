@@ -2,8 +2,9 @@
 
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
-import { Package, Factory, Truck, CreditCard, ExternalLink } from "lucide-react";
+import { ExternalLink, Settings2 } from "lucide-react";
 import { api } from "@/trpc/react";
+import { useUserRole } from "@/hooks/use-role";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,12 +31,15 @@ import { StatCard } from "./StatCard";
 
 export function AnalyticsClient() {
   const t = useTranslations("dashboard");
+  const ts = useTranslations("settings");
   const locale = useLocale();
   const isArabic = locale === "ar";
+  const { canWrite } = useUserRole();
 
   const { data: stats, isLoading } = api.analytics.getDashboardStats.useQuery();
+  const { data: dynamicCards, isLoading: isLoadingCards } = api.analytics.evaluateCards.useQuery();
 
-  if (isLoading || !stats) {
+  if (isLoading || isLoadingCards || !stats) {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -51,37 +55,43 @@ export function AnalyticsClient() {
     );
   }
 
+  // Unit translation map
+  const unitLabels: Record<string, string> = {
+    tons: t("tons"),
+    rolls: t("rolls"),
+    egp: t("egp"),
+    kg: "kg",
+    count: "",
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 fill-mode-forwards">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="إجمالي المواد الخام"
-          value={stats.totalRawMaterials}
-          unit="طن"
-          icon={Package}
-          gradient="bg-linear-to-r from-blue-500 to-blue-600"
-        />
-        <StatCard
-          title="إجمالي المنتجات"
-          value={stats.totalProducts}
-          unit="لفة"
-          icon={Factory}
-          gradient="bg-linear-to-r from-emerald-500 to-emerald-600"
-        />
-        <StatCard
-          title="مبيعات الشهر"
-          value={stats.salesThisMonth}
-          unit="ج.م"
-          icon={Truck}
-          gradient="bg-linear-to-r from-amber-500 to-amber-600"
-        />
-        <StatCard
-          title="المدفوعات المعلقة"
-          value={stats.outstandingPayments}
-          unit="ج.م"
-          icon={CreditCard}
-          gradient="bg-linear-to-r from-rose-500 to-rose-600"
-        />
+      {canWrite && (
+        <div className="flex justify-end">
+          <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs shadow-sm hover:shadow-md transition-all">
+            <Link href="/settings?tab=cards">
+              <Settings2 className="h-3.5 w-3.5" />
+              {ts("manageCards")}
+            </Link>
+          </Button>
+        </div>
+      )}
+      <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-${Math.min(dynamicCards?.length || 4, 4)}`}>
+        {dynamicCards ? dynamicCards.map((card) => (
+          <StatCard
+            key={card.id}
+            title={isArabic ? card.titleAr : card.title}
+            value={card.value}
+            unit={unitLabels[card.unit] ?? card.unit}
+            icon={card.icon}
+            gradient={card.gradient}
+          />
+        )) : (
+          // Fallback while loading dynamic cards
+          [1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-[120px] rounded-xl bg-muted/60 animate-pulse" />
+          ))
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -197,7 +207,7 @@ export function AnalyticsClient() {
                             delivery.paymentStatus === "partial" ? "secondary" : "destructive"
                           }
                         >
-                          {delivery.paymentStatus}
+                          {t(delivery.paymentStatus)}
                         </Badge>
                       </TableCell>
                     </TableRow>

@@ -10,7 +10,10 @@
     "companies": "Companies",
     "deliveries": "Deliveries",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "invite": "Invite User",
+    "brandName": "Prime Paper",
+    "brandSub": "Factory Manager"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -53,6 +56,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "noData": "No raw materials yet",
+    "emptyStateDesc": "Add your first incoming raw material shipment.",
     "confirmDelete": "Are you sure you want to delete this raw material?"
   },
   "products": {
@@ -71,6 +75,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "noData": "No products yet",
+    "emptyStateDesc": "Add your first product to inventory.",
     "selectRawMaterial": "Select Raw Material",
     "confirmDelete": "Are you sure you want to delete this product?"
   },
@@ -88,6 +93,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "noData": "No companies yet",
+    "emptyStateDesc": "Add your first company to get started.",
     "confirmDelete": "Are you sure you want to delete this company?"
   },
   "deliveries": {
@@ -111,6 +117,11 @@
     "save": "Save",
     "cancel": "Cancel",
     "noData": "No deliveries yet",
+    "emptyStateDesc": "Create your first delivery to get started.",
+    "emptyItems": "No products added to this delivery yet.",
+    "emptyPayments": "No payments recorded.",
+    "deliveryNotFound": "Delivery not found",
+    "backToDeliveries": "Back to Deliveries",
     "payments": "Payments",
     "addPayment": "Add Payment",
     "amount": "Amount (EGP)",
@@ -124,10 +135,17 @@
     "password": "Password",
     "role": "Role",
     "admin": "Admin",
-    "viewer": "Viewer",
+    "user": "User (View Only)",
     "submit": "Create User",
     "success": "User created successfully",
-    "error": "Failed to create user"
+    "error": "Failed to create user",
+    "createUser": "Create User",
+    "passwordResets": "Password Resets",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "resetFailed": "Failed to reset password",
+    "noPendingResets": "No pending password resets.",
+    "newPassword": "New Password",
+    "resolve": "Resolve"
   },
   "settings": {
     "title": "Settings",
@@ -135,6 +153,9 @@
     "arabic": "العربية",
     "english": "English",
     "account": "Account",
+    "systemAndLanguage": "System & Language",
+    "systemLanguage": "System Language",
+    "systemLanguageDesc": "Select your preferred language for the interface.",
     "profileInfo": "Profile Information",
     "name": "Name",
     "email": "Email",
@@ -143,7 +164,36 @@
     "newPassword": "New Password",
     "updatePassword": "Update Password",
     "passwordUpdated": "Password updated successfully",
-    "passwordError": "Failed to update password"
+    "passwordError": "Failed to update password",
+    "unableToLoadProfile": "Unable to load user profile.",
+    "systemConfig": "System Configuration",
+    "systemConfigDesc": "Manage operational settings that control system behavior.",
+    "settingKey": "Setting",
+    "settingValue": "Value",
+    "category": "Category",
+    "save": "Save",
+    "saved": "Saved",
+    "saving": "Saving...",
+    "dashboardCards": "Dashboard Cards",
+    "dashboardCardsDesc": "Configure the stat cards shown on the dashboard.",
+    "addCard": "Add Card",
+    "editCard": "Edit Card",
+    "deleteCard": "Delete Card",
+    "cardTitle": "Title (English)",
+    "cardTitleAr": "Title (Arabic)",
+    "cardEquation": "Equation",
+    "cardUnit": "Unit",
+    "cardIcon": "Icon",
+    "cardGradient": "Color",
+    "cardVisible": "Visible",
+    "noCards": "No dashboard cards configured.",
+    "confirmDeleteCard": "Are you sure you want to delete this card?",
+    "addVariable": "Add Variable",
+    "operators": "Operators",
+    "preview": "Preview",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down",
+    "manageCards": "Manage Cards"
   },
   "auth": {
     "login": "Login",
@@ -157,7 +207,14 @@
     "dontHaveAccount": "Don't have an account?",
     "signupSuccess": "Account created successfully!",
     "error": "Invalid email or password",
-    "signupError": "Failed to create account"
+    "signupError": "Failed to create account",
+    "forgotPasswordTitle": "Forgot Password",
+    "forgotPasswordDesc": "Enter your email and we'll submit a reset request to the administrator.",
+    "sendResetLink": "Submit Reset Request",
+    "checkEmail": "Your request has been submitted. An administrator will reset your password.",
+    "backToLogin": "Back to login",
+    "brandTitle": "Prime Paper | برايم بيبر",
+    "brandDesc": "Paper Factory Management System"
   },
   "landing": {
     "title": "Modern Factory Management",
@@ -177,6 +234,9 @@
     "total": "Total",
     "previous": "Previous",
     "next": "Next",
-    "page": "Page"
+    "page": "Page",
+    "egp": "EGP",
+    "tons": "Tons",
+    "kg": "kg"
   }
 }

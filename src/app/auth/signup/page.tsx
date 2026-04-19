@@ -61,7 +61,7 @@ export default function SignupPage() {
               {t("signup")}
             </CardTitle>
             <CardDescription className="mt-1">
-               Prime Paper Factory Management 
+               {t("brandDesc")}
             </CardDescription>
           </div>
         </CardHeader>

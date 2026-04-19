@@ -36,7 +36,7 @@ export default function LoginPage() {
       if (result.error) {
         setError(t("error"));
       } else {
-        window.location.href = "/";
+        window.location.href = "/dashboard";
       }
     } catch {
       setError(t("error"));
@@ -54,10 +54,10 @@ export default function LoginPage() {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">
-              Prime Paper | برايم بيبر
+              {t("brandTitle")}
             </CardTitle>
             <CardDescription className="mt-1">
-              Paper Factory Management System
+              {t("brandDesc")}
             </CardDescription>
           </div>
         </CardHeader>

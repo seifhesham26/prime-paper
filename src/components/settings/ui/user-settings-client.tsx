@@ -62,7 +62,7 @@ export function UserSettingsClient() {
     return (
       <Card className="border-0 shadow-md bg-card/50">
         <CardContent className="h-[200px] flex items-center justify-center text-muted-foreground">
-          Unable to load user profile.
+          {t("unableToLoadProfile")}
         </CardContent>
       </Card>
     );

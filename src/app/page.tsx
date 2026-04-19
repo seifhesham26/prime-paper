@@ -43,7 +43,7 @@ export default async function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <main className="flex-grow pt-32 pb-20 relative overflow-hidden">
+      <main className="grow pt-32 pb-20 relative overflow-hidden">
         {/* Abstract Background Shapes */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -z-10 w-full h-full pointer-events-none opacity-20 dark:opacity-30">
            <div className="absolute top-[10%] left-[10%] w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse" />
@@ -110,7 +110,7 @@ export default async function LandingPage() {
              </div>
              
              {/* Floating UI elements */}
-             <div className="absolute -top-6 -right-6 h-20 w-56 bg-emerald-500/10 backdrop-blur-md rounded-2xl border border-emerald-500/20 p-4 flex items-center gap-4 shadow-xl animate-bounce duration-[3000ms]">
+             <div className="absolute -top-6 -right-6 h-20 w-56 bg-emerald-500/10 backdrop-blur-md rounded-2xl border border-emerald-500/20 p-4 flex items-center gap-4 shadow-xl animate-bounce duration-3000">
                 <div className="h-10 w-10 bg-emerald-500 rounded-full flex items-center justify-center font-bold text-white shadow-lg">✓</div>
                 <div>
                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Production Yield</p>

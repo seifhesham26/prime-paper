@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { api } from "@/trpc/react";
+import { useUserRole } from "@/hooks/use-role";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,9 @@ function PaymentBadge({ status }: { status: string | null }) {
 
 export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
   const t = useTranslations("deliveries");
+  const locale = useLocale();
+  const isArabic = locale === "ar";
+  const { canWrite } = useUserRole();
   const [paymentOpen, setPaymentOpen] = useState(false);
 
   const utils = api.useUtils();
@@ -70,9 +74,9 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
         <PackageOpen className="h-12 w-12 text-muted-foreground/50" />
-        <p className="text-lg text-muted-foreground">Delivery not found</p>
+        <p className="text-lg text-muted-foreground">{t("deliveryNotFound")}</p>
         <Button variant="outline" asChild>
-          <Link href="/deliveries">Back to Deliveries</Link>
+          <Link href="/deliveries">{t("backToDeliveries")}</Link>
         </Button>
       </div>
     );
@@ -172,7 +176,7 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
           <CardContent className="p-0">
             {delivery.items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <p className="text-sm">لا توجد عناصر</p>
+                <p className="text-sm">{t("emptyItems")}</p>
               </div>
             ) : (
               <Table>
@@ -209,7 +213,7 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
                 <CreditCard className="h-5 w-5 text-muted-foreground" />
                 {t("payments")}
               </CardTitle>
-              <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
+              {canWrite && <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="gap-1 shadow-sm hover:shadow-md transition-all">
                     <Plus className="h-3 w-3" />
@@ -264,13 +268,13 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
                     </div>
                   </form>
                 </DialogContent>
-              </Dialog>
+              </Dialog>}
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {delivery.payments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <p className="text-sm">لا توجد مدفوعات</p>
+                <p className="text-sm">{t("emptyPayments")}</p>
               </div>
             ) : (
               <Table>
@@ -285,7 +289,7 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
                   {delivery.payments.map((p) => (
                     <TableRow key={p.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell dir="ltr" className="text-start text-muted-foreground whitespace-nowrap">
-                        {new Date(p.date).toLocaleDateString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {new Date(p.date).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
                       </TableCell>
                       <TableCell className="text-center font-medium text-emerald-600 dark:text-emerald-500" dir="ltr">
                         {Number(p.amountEgp).toLocaleString()} EGP

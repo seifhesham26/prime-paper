@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/trpc/react";
+import { useUserRole } from "@/hooks/use-role";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,9 @@ export function RawMaterialsClient() {
   
   const [open, setOpen] = useState(false);
   const [editItem, setEditItem] = useState<RawMaterial | null>(null);
+  const locale = useLocale();
+  const isArabic = locale === "ar";
+  const { canWrite } = useUserRole();
 
   const utils = api.useUtils();
   
@@ -103,7 +107,7 @@ export function RawMaterialsClient() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <h3 className="text-2xl font-semibold tracking-tight">{t("title")}</h3>
-        <Dialog
+        {canWrite && <Dialog
           open={open}
           onOpenChange={(v) => {
             setOpen(v);
@@ -202,7 +206,7 @@ export function RawMaterialsClient() {
               </div>
             </form>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
 
       {isLoading ? (
@@ -218,7 +222,7 @@ export function RawMaterialsClient() {
                <Package className="h-10 w-10 text-muted-foreground/50" />
             </div>
             <p className="text-lg font-medium">{t("noData")}</p>
-            <p className="text-sm text-muted-foreground mt-2">Add your first incoming raw material shipment.</p>
+            <p className="text-sm text-muted-foreground mt-2">{t("emptyStateDesc")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -237,18 +241,18 @@ export function RawMaterialsClient() {
                     {t("costPerTon")}
                   </TableHead>
                   <TableHead className="font-semibold">{t("notes")}</TableHead>
-                  <TableHead className="text-center font-semibold w-[100px]">{t("actions")}</TableHead>
+                  {canWrite && <TableHead className="text-center font-semibold w-[100px]">{t("actions")}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {materials.map((m) => (
                   <TableRow key={m.id} className="group hover:bg-muted/30 transition-colors">
                     <TableCell dir="ltr" className="text-start whitespace-nowrap">
-                      {new Date(m.dateReceived).toLocaleDateString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric' })}
+                      {new Date(m.dateReceived).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
                     </TableCell>
                     <TableCell className="font-medium text-muted-foreground">{m.supplierName}</TableCell>
                     <TableCell className="text-center font-medium" dir="ltr">
-                      {Number(m.weightTons).toLocaleString()} Tons
+                      {Number(m.weightTons).toLocaleString()} {isArabic ? "طن" : "Tons"}
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground" dir="ltr">
                       {Number(m.costEgp).toLocaleString()} EGP
@@ -261,7 +265,7 @@ export function RawMaterialsClient() {
                     <TableCell className="max-w-[200px] truncate text-muted-foreground">
                       {m.notes || "-"}
                     </TableCell>
-                    <TableCell>
+                    {canWrite && <TableCell>
                       <div className="flex items-center justify-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="ghost"
@@ -281,7 +285,7 @@ export function RawMaterialsClient() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                 ))}
               </TableBody>

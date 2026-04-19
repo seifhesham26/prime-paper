@@ -52,10 +52,10 @@ export function AppSidebar() {
           </div>
           <div className="group-data-[collapsible=icon]:hidden">
             <h1 className="text-base font-bold leading-tight">
-              {locale === "ar" ? "برايم بيبر" : "Prime Paper"}
+              {t("brandName")}
             </h1>
             <p className="text-xs text-muted-foreground">
-              {locale === "ar" ? "إدارة المصنع" : "Factory Manager"}
+              {t("brandSub")}
             </p>
           </div>
         </Link>
@@ -85,12 +85,12 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
-          {isDev && (
+          {(isDev || session?.user?.role === "admin") && (
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname === "/invite"}>
                 <Link href="/invite">
                   <UserPlus className="h-4 w-4" />
-                  <span>{locale === "ar" ? "دعوة مستخدم" : "Invite User"}</span>
+                  <span>{t("invite")}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

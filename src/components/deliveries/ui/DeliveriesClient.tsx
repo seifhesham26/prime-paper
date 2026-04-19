@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { api } from "@/trpc/react";
+import { useUserRole } from "@/hooks/use-role";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,9 @@ function PaymentBadge({ status }: { status: "paid" | "partial" | "unpaid" | null
 
 export function DeliveriesClient({ products }: { products: Product[] }) {
   const t = useTranslations("deliveries");
+  const locale = useLocale();
+  const isArabic = locale === "ar";
+  const { canWrite } = useUserRole();
   const [open, setOpen] = useState(false);
 
   const utils = api.useUtils();
@@ -140,7 +144,7 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <h3 className="text-2xl font-semibold tracking-tight">{t("title")}</h3>
-        <Dialog
+        {canWrite && <Dialog
           open={open}
           onOpenChange={(v) => {
             setOpen(v);
@@ -277,7 +281,7 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
                   ))}
                   {items.length === 0 && (
                     <div className="text-center py-6 text-sm text-muted-foreground border-2 border-dashed rounded-lg border-muted">
-                      No products added to this delivery yet.
+                      {t("emptyItems")}
                     </div>
                   )}
                 </div>
@@ -297,7 +301,7 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
               </div>
             </form>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
 
       {isLoadingDeliveries ? (
@@ -313,7 +317,7 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
               <Truck className="h-10 w-10 text-muted-foreground/50" />
             </div>
             <p className="text-lg font-medium">{t("noData")}</p>
-            <p className="text-sm text-muted-foreground mt-2">Create your first delivery to get started.</p>
+            <p className="text-sm text-muted-foreground mt-2">{t("emptyStateDesc")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -334,7 +338,7 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
                 {deliveries.map((d) => (
                   <TableRow key={d.id} className="group hover:bg-muted/30 transition-colors">
                     <TableCell dir="ltr" className="text-start whitespace-nowrap">
-                      {new Date(d.date).toLocaleDateString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric' })}
+                      {new Date(d.date).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
                     </TableCell>
                     <TableCell className="font-medium">
                       {d.companyName}
@@ -355,7 +359,7 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button
+                        {canWrite && <Button
                           variant="ghost"
                           size="icon"
                           className="hover:bg-destructive/10 hover:text-destructive transition-colors h-8 w-8"
@@ -363,7 +367,7 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
                           disabled={deleteMutation.isPending}
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button>}
                       </div>
                     </TableCell>
                   </TableRow>

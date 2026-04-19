@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/trpc/react";
+import { useUserRole } from "@/hooks/use-role";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,9 @@ export function ProductsClient({
   rawMaterials: RawMaterial[];
 }) {
   const t = useTranslations("products");
+  const locale = useLocale();
+  const isArabic = locale === "ar";
+  const { canWrite } = useUserRole();
   
   const [open, setOpen] = useState(false);
   const [editItem, setEditItem] = useState<Product | null>(null);
@@ -126,7 +130,7 @@ export function ProductsClient({
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <h3 className="text-2xl font-semibold tracking-tight">{t("title")}</h3>
-        <Dialog
+        {canWrite && <Dialog
           open={open}
           onOpenChange={(v) => {
             setOpen(v);
@@ -172,7 +176,7 @@ export function ProductsClient({
                   <SelectContent>
                     {rawMaterials.map((rm) => (
                       <SelectItem key={rm.id} value={rm.id}>
-                        {rm.supplierName} - {new Date(rm.dateReceived).toLocaleDateString("ar-EG")} ({rm.weightTons} طن)
+                        {rm.supplierName} - {new Date(rm.dateReceived).toLocaleDateString(isArabic ? "ar-EG" : "en-US")} ({rm.weightTons} {isArabic ? "طن" : "tons"})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -261,7 +265,7 @@ export function ProductsClient({
               </div>
             </form>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
 
       {isLoading ? (
@@ -277,7 +281,7 @@ export function ProductsClient({
                <Factory className="h-10 w-10 text-muted-foreground/50" />
             </div>
             <p className="text-lg font-medium">{t("noData")}</p>
-            <p className="text-sm text-muted-foreground mt-2">Add your first product to inventory.</p>
+            <p className="text-sm text-muted-foreground mt-2">{t("emptyStateDesc")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -292,14 +296,14 @@ export function ProductsClient({
                   <TableHead className="text-center font-semibold">{t("widthCm")}</TableHead>
                   <TableHead className="text-center font-semibold">{t("weightKg")}</TableHead>
                   <TableHead className="text-center font-semibold">{t("quantity")}</TableHead>
-                  <TableHead className="text-center font-semibold w-[100px]">{t("actions")}</TableHead>
+                  {canWrite && <TableHead className="text-center font-semibold w-[100px]">{t("actions")}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {products.map((p) => (
                   <TableRow key={p.id} className="group hover:bg-muted/30 transition-colors">
                     <TableCell dir="ltr" className="text-start whitespace-nowrap">
-                      {new Date(p.dateProduced).toLocaleDateString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric' })}
+                      {new Date(p.dateProduced).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{p.supplierName || "-"}</TableCell>
                     <TableCell className="text-center font-medium" dir="ltr">
@@ -309,12 +313,12 @@ export function ProductsClient({
                       {p.widthCm}
                     </TableCell>
                     <TableCell className="text-center text-muted-foreground" dir="ltr">
-                      {p.weightKg} kg
+                      {p.weightKg} {isArabic ? "كجم" : "kg"}
                     </TableCell>
                     <TableCell className="text-center font-medium" dir="ltr">
                       {p.quantity}
                     </TableCell>
-                    <TableCell>
+                    {canWrite && <TableCell>
                       <div className="flex items-center justify-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="ghost"
@@ -334,7 +338,7 @@ export function ProductsClient({
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                 ))}
               </TableBody>

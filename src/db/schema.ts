@@ -74,19 +74,6 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updated_at"),
 });
 
-export const invitation = pgTable("invitation", {
-  id: text("id").primaryKey(),
-  organizationId: text("organization_id").notNull(),
-  email: text("email").notNull(),
-  role: text("role"),
-  status: text("status").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  inviterId: text("inviter_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
 
 // ─── Raw Materials (Incoming Rolls) ──────────────────────
 export const rawMaterials = pgTable("raw_materials", {
@@ -180,6 +167,29 @@ export const resetRequests = pgTable("reset_requests", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull(),
   status: text("status", { enum: ["pending", "resolved"] }).notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ─── System Settings (Key-Value Config) ──────────────────
+export const systemSettings = pgTable("system_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  category: text("category").notNull(), // 'dashboard', 'operational', 'ui'
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ─── Dashboard Cards (Configurable Stat Cards) ──────────
+export const dashboardCards = pgTable("dashboard_cards", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  titleAr: text("title_ar").notNull(),
+  equation: text("equation").notNull(),
+  unit: text("unit").notNull(),
+  icon: text("icon").notNull(),
+  gradient: text("gradient").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  visible: boolean("visible").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

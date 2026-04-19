@@ -7,7 +7,7 @@ import { InviteClient } from "./client";
 export default async function InvitePage() {
   const session = await getSession();
 
-  if (!session || session.user.role !== "dev") {
+  if (!session || (session.user.role !== "dev" && session.user.role !== "admin")) {
     redirect("/");
   }
 

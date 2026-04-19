@@ -6,11 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Languages } from "lucide-react";
 import { UserSettingsClient } from "@/components/settings/ui/user-settings-client";
+import { SystemConfigClient } from "@/components/settings/ui/system-config-client";
+import { DashboardCardEditor } from "@/components/settings/ui/dashboard-card-editor";
+import { useUserRole } from "@/hooks/use-role";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SettingsPage() {
   const t = useTranslations("settings");
+  const { canWrite } = useUserRole();
 
   const toggleLanguage = () => {
     const currentLocale =
@@ -41,8 +45,24 @@ export default function SettingsPage() {
                 value="global" 
                 className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary px-4 py-2.5 rounded-full"
               >
-                System & Language
+                {t("systemAndLanguage")}
               </TabsTrigger>
+              {canWrite && (
+                <TabsTrigger 
+                  value="config" 
+                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary px-4 py-2.5 rounded-full"
+                >
+                  {t("systemConfig")}
+                </TabsTrigger>
+              )}
+              {canWrite && (
+                <TabsTrigger 
+                  value="cards" 
+                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary px-4 py-2.5 rounded-full"
+                >
+                  {t("dashboardCards")}
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
@@ -61,8 +81,8 @@ export default function SettingsPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
                   <div className="space-y-1">
-                    <h4 className="font-medium">System Language</h4>
-                    <p className="text-sm text-muted-foreground">Select your preferred language for the interface.</p>
+                    <h4 className="font-medium">{t("systemLanguage")}</h4>
+                    <p className="text-sm text-muted-foreground">{t("systemLanguageDesc")}</p>
                   </div>
                   <Button 
                     variant="outline" 
@@ -76,6 +96,18 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {canWrite && (
+            <TabsContent value="config" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+              <SystemConfigClient />
+            </TabsContent>
+          )}
+
+          {canWrite && (
+            <TabsContent value="cards" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+              <DashboardCardEditor />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </>

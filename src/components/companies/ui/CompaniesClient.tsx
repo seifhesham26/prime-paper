@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { api } from "@/trpc/react";
+import { useUserRole } from "@/hooks/use-role";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import type { Company } from "@/server/companies/types";
 
 export function CompaniesClient() {
   const t = useTranslations("companies");
+  const { canWrite } = useUserRole();
   const [open, setOpen] = useState(false);
   const [editItem, setEditItem] = useState<Company | null>(null);
 
@@ -97,7 +99,7 @@ export function CompaniesClient() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <h3 className="text-2xl font-semibold tracking-tight">{t("title")}</h3>
-        <Dialog
+        {canWrite && <Dialog
           open={open}
           onOpenChange={(v) => {
             setOpen(v);
@@ -185,7 +187,7 @@ export function CompaniesClient() {
               </div>
             </form>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
 
       {isLoading ? (
@@ -201,7 +203,7 @@ export function CompaniesClient() {
                <Building2 className="h-10 w-10 text-muted-foreground/50" />
             </div>
             <p className="text-lg font-medium">{t("noData")}</p>
-            <p className="text-sm text-muted-foreground mt-2">Add your first company to get started.</p>
+            <p className="text-sm text-muted-foreground mt-2">{t("emptyStateDesc")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -215,7 +217,7 @@ export function CompaniesClient() {
                   <TableHead className="font-semibold">{t("phone")}</TableHead>
                   <TableHead className="font-semibold">{t("address")}</TableHead>
                   <TableHead className="font-semibold">{t("notes")}</TableHead>
-                  <TableHead className="text-center font-semibold w-[100px]">{t("actions")}</TableHead>
+                  {canWrite && <TableHead className="text-center font-semibold w-[100px]">{t("actions")}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -230,7 +232,7 @@ export function CompaniesClient() {
                     <TableCell className="max-w-[200px] truncate text-muted-foreground">
                       {c.notes || "-"}
                     </TableCell>
-                    <TableCell>
+                    {canWrite && <TableCell>
                       <div className="flex items-center justify-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="ghost"
@@ -250,7 +252,7 @@ export function CompaniesClient() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                 ))}
               </TableBody>
