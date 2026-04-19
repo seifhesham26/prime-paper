@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { signIn } from "@/lib/auth-client";
+import { signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +13,12 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { ScrollText, Loader2, UserPlus } from "lucide-react";
-export default function LoginPage() {
+import { ScrollText, Loader2, ArrowRight } from "lucide-react";
+import Link from "next/link";
+
+export function SignupClient() {
   const t = useTranslations("auth");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,24 +30,27 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await signIn.email({
+      const result = await signUp.email({
         email,
         password,
+        name,
+        callbackURL: "/dashboard",
       });
       if (result.error) {
-        setError(t("error"));
+        setError(result.error.message || t("signupError"));
       } else {
+        // Redirection is handled by callbackURL or manually if needed
         window.location.href = "/dashboard";
       }
     } catch {
-      setError(t("error"));
+      setError(t("signupError"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background via-accent/30 to-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background via-accent/30 to-background p-4 animate-in fade-in duration-500">
       <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 pb-2">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
@@ -52,15 +58,26 @@ export default function LoginPage() {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">
-              {t("brandTitle")}
+              {t("signup")}
             </CardTitle>
             <CardDescription className="mt-1">
-              {t("brandDesc")}
+               {t("brandDesc")}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">{t("name")}</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">{t("email")}</Label>
               <Input
@@ -83,6 +100,7 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 required
                 dir="ltr"
+                minLength={8}
               />
             </div>
             {error && (
@@ -95,12 +113,19 @@ export default function LoginPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  {t("submit")}
-                  <UserPlus className="h-4 w-4" />
+                  {t("signupSubmit")}
+                  <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </>
               )}
             </Button>
-
+            <div className="text-center pt-2">
+               <p className="text-sm text-muted-foreground">
+                  {t("alreadyHaveAccount")}{" "}
+                  <Link href="/auth/login" className="text-primary font-medium hover:underline">
+                    {t("login")}
+                  </Link>
+               </p>
+            </div>
           </form>
         </CardContent>
       </Card>
