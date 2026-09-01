@@ -51,6 +51,19 @@ const enforceWriter = t.middleware(({ ctx, next }) => {
   });
 });
 
+/** Enforce the dev role — account administration only */
+const enforceDev = t.middleware(({ ctx, next }) => {
+  if (!ctx.session?.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  if (ctx.session.user.role !== "dev") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Requires the dev role" });
+  }
+  return next({
+    ctx: { ...ctx, session: ctx.session },
+  });
+});
+
 // ─── Procedures ──────────────────────────────────────────
 
 export const createTRPCRouter = t.router;
@@ -63,3 +76,6 @@ export const protectedProcedure = t.procedure.use(enforceAuth);
 
 /** Only dev + admin can call (create/update/delete operations) */
 export const writerProcedure = t.procedure.use(enforceWriter);
+
+/** Only dev can call (user administration, password resets) */
+export const devProcedure = t.procedure.use(enforceDev);

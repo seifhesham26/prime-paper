@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { companies } from "@/db/schema";
+import { companies, deliveries } from "@/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import type { z } from "zod";
 import type { CreateCompanySchema, UpdateCompanySchema } from "./types";
@@ -24,8 +24,21 @@ export async function findCompanies(page = 1, limit = 10) {
   };
 }
 
-export async function insertCompany(data: z.infer<typeof CreateCompanySchema>) {
+/** Blocks deletion of a company a delivery still refers to. */
+export async function countCompanyDeliveries(id: string) {
+  const [row] = await db
+    .select({ count: sql<string>`count(*)` })
+    .from(deliveries)
+    .where(eq(deliveries.companyId, id));
+  return Number(row?.count || 0);
+}
+
+export async function insertCompany(
+  data: z.infer<typeof CreateCompanySchema>,
+  userId: string,
+) {
   const [newCompany] = await db.insert(companies).values({
+    createdBy: userId,
     name: data.name,
     contactPerson: data.contactPerson || null,
     phone: data.phone || null,

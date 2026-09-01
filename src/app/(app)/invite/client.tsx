@@ -24,33 +24,37 @@ export function InviteClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
-  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess(false);
-
-    try {
-      await authClient.admin.createUser({
-        email,
-        name,
-        password,
-        role: role as "user" | "admin",
-      });
+  // Goes through the server so the role is applied by code that has already
+  // authorised the caller. The previous client-side admin call returned
+  // { error } rather than throwing, so failures were reported as successes.
+  const inviteMutation = api.users.invite.useMutation({
+    onSuccess: () => {
       setSuccess(true);
+      setError("");
       setName("");
       setEmail("");
       setPassword("");
       setRole("user");
-    } catch {
-      setError(t("error"));
-    } finally {
-      setLoading(false);
-    }
+    },
+    onError: (err) => {
+      setSuccess(false);
+      setError(err.message || t("error"));
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess(false);
+    inviteMutation.mutate({
+      name,
+      email,
+      password,
+      role: role as "admin" | "user",
+    });
   };
 
   return (
@@ -116,13 +120,13 @@ export function InviteClient() {
                       <SelectItem value="admin">
                         <div className="flex items-center gap-2">
                           <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                          {t("admin")}
+                          {t("roleAdmin")}
                         </div>
                       </SelectItem>
                       <SelectItem value="user">
                         <div className="flex items-center gap-2">
                           <Eye className="h-4 w-4 text-blue-600" />
-                          {t("user")}
+                          {t("roleViewer")}
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -142,8 +146,8 @@ export function InviteClient() {
                     </div>
                   )}
 
-                  <Button type="submit" disabled={loading} className="w-full gap-2 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                    {loading ? (
+                  <Button type="submit" disabled={inviteMutation.isPending} className="w-full gap-2 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+                    {inviteMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <UserPlus className="h-4 w-4" />
@@ -183,16 +187,26 @@ function PasswordResetsTab() {
     try {
       // Look up user by email via targeted server-side query
       const found = await utils.users.getUserIdByEmail.fetch({ email });
-      
-      if (found) {
-        // Set new password
-        await authClient.admin.updateUser({
-          userId: found.id,
-          data: { password: newPassword }
-        });
+
+      if (!found) {
+        // Resolving here would close the ticket without changing any password.
+        alert(t("resetFailed") + ": " + t("noAccountForEmail"));
+        return;
       }
-      
-      // Mark as resolved in our tickets DB
+
+      // Better Auth returns { error } rather than throwing, so this must be
+      // checked explicitly — otherwise a failed reset still marks the ticket
+      // resolved and the person is told it worked.
+      const res = await authClient.admin.updateUser({
+        userId: found.id,
+        data: { password: newPassword },
+      });
+
+      if (res.error) {
+        alert(t("resetFailed") + ": " + (res.error.message ?? ""));
+        return;
+      }
+
       resolveMutation.mutate({ id });
     } catch (err) {
       console.error(err);

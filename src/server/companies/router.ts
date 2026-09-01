@@ -1,5 +1,6 @@
 import { createTRPCRouter, protectedProcedure, writerProcedure } from "../trpc";
 import { z } from "zod";
+import { getSettingsMap } from "../settings/db";
 import { getCompaniesService, createCompanyService, updateCompanyService, deleteCompanyService } from "./services";
 import { CreateCompanySchema, GetCompaniesSchema, UpdateCompanySchema } from "./types";
 
@@ -7,13 +8,17 @@ export const companiesRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(GetCompaniesSchema)
     .query(async ({ input }) => {
-      return await getCompaniesService(input.page, input.limit);
+      const { pageSizeDefault, dropdownListLimit } = await getSettingsMap();
+      return await getCompaniesService(
+        input.page,
+        input.forDropdown ? dropdownListLimit : pageSizeDefault,
+      );
     }),
 
   create: writerProcedure
     .input(CreateCompanySchema)
-    .mutation(async ({ input }) => {
-      return await createCompanyService(input);
+    .mutation(async ({ input, ctx }) => {
+      return await createCompanyService(input, ctx.session.user.id);
     }),
 
   update: writerProcedure

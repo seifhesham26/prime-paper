@@ -75,11 +75,26 @@ export const verification = pgTable("verification", {
 });
 
 
-// ─── Raw Materials (Incoming Rolls) ──────────────────────
-export const rawMaterials = pgTable("raw_materials", {
+// ─── Raw Material Types (Parent Material) ────────────────
+// The owner's own label for a kind of material, usually reflecting where it
+// came from. Stock is never stored here — it is derived from the receipts
+// and consumptions below, so the two can never disagree.
+export const rawMaterialTypes = pgTable("raw_material_types", {
   id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull().unique(),
+  notes: text("notes"),
+  createdBy: text("created_by").references(() => user.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ─── Raw Material Receipts (Incoming Shipments) ──────────
+export const rawMaterialReceipts = pgTable("raw_material_receipts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  typeId: uuid("type_id")
+    .notNull()
+    .references(() => rawMaterialTypes.id),
   dateReceived: timestamp("date_received").notNull(),
-  supplierName: text("supplier_name").notNull(),
   weightTons: decimal("weight_tons", { precision: 10, scale: 3 }).notNull(),
   costEgp: decimal("cost_egp", { precision: 12, scale: 2 }).notNull(),
   costPerTon: decimal("cost_per_ton", { precision: 12, scale: 2 }),
@@ -89,10 +104,28 @@ export const rawMaterials = pgTable("raw_materials", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// ─── Raw Material Consumptions (Converted to Rolls) ──────
+// Recorded by hand when material goes into production. Nothing deducts
+// automatically — a product's weight never moves this balance.
+export const rawMaterialConsumptions = pgTable("raw_material_consumptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  typeId: uuid("type_id")
+    .notNull()
+    .references(() => rawMaterialTypes.id),
+  date: timestamp("date").notNull(),
+  weightTons: decimal("weight_tons", { precision: 10, scale: 3 }).notNull(),
+  notes: text("notes"),
+  createdBy: text("created_by").references(() => user.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // ─── Products (Finished Rolls) ───────────────────────────
 export const products = pgTable("products", {
   id: uuid("id").defaultRandom().primaryKey(),
-  rawMaterialId: uuid("raw_material_id").references(() => rawMaterials.id),
+  rawMaterialTypeId: uuid("raw_material_type_id").references(() => rawMaterialTypes.id, {
+    onDelete: "set null",
+  }),
   dateProduced: timestamp("date_produced").notNull(),
   lengthM: decimal("length_m", { precision: 10, scale: 2 }).notNull(),
   widthCm: decimal("width_cm", { precision: 10, scale: 2 }).notNull(),

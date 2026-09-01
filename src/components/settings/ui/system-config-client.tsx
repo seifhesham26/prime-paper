@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/trpc/react";
+import { SETTINGS_BY_KEY } from "@/server/settings/registry";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,13 +12,18 @@ import { Loader2, Check, Settings2 } from "lucide-react";
 
 export function SystemConfigClient() {
   const t = useTranslations("settings");
+  const locale = useLocale();
+  const isArabic = locale === "ar";
   const { data: settings, isLoading } = api.settings.getAll.useQuery();
   const utils = api.useUtils();
 
   const updateMutation = api.settings.update.useMutation({
     onSuccess: () => {
       utils.settings.getAll.invalidate();
+      utils.analytics.getDashboardStats.invalidate();
+      utils.analytics.evaluateCards.invalidate();
     },
+    onError: (err) => alert(err.message),
   });
 
   const [editedValues, setEditedValues] = useState<Record<string, string>>({});
@@ -38,6 +44,9 @@ export function SystemConfigClient() {
         delete next[key];
         return next;
       });
+    } catch {
+      // Rejected by range validation; onError reported it and the edited
+      // value stays in the box so it can be corrected.
     } finally {
       setSavingKey(null);
     }
@@ -105,7 +114,12 @@ export function SystemConfigClient() {
                     className="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
-                      <code className="text-sm font-mono text-foreground">
+                      <span className="text-sm font-medium block">
+                        {isArabic
+                          ? (SETTINGS_BY_KEY.get(setting.key)?.labelAr ?? setting.key)
+                          : (SETTINGS_BY_KEY.get(setting.key)?.label ?? setting.key)}
+                      </span>
+                      <code className="text-xs font-mono text-muted-foreground">
                         {setting.key}
                       </code>
                     </div>

@@ -12,8 +12,9 @@ export const CompanySchema = z.object({
 });
 
 export const GetCompaniesSchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(10),
+  page: z.number().int().min(1).default(1),
+  /** Fetching to fill a picker rather than to page a table. */
+  forDropdown: z.boolean().default(false),
 });
 
 export const CreateCompanySchema = z.object({

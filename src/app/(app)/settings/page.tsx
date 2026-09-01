@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function SettingsPage() {
   const t = useTranslations("settings");
   const { canWrite } = useUserRole();
+
+  // The dashboard links to /settings?tab=cards; without this the link
+  // always landed on the Account tab.
+  const searchParams = useSearchParams();
+  const requested = searchParams.get("tab");
+  const validTabs = ["account", "global", "config", "cards"];
+  const initialTab = requested && validTabs.includes(requested) ? requested : "account";
 
   const toggleLanguage = () => {
     const currentLocale =
@@ -32,7 +40,7 @@ export default function SettingsPage() {
     <>
       <Header title={t("title")} />
       <div className="p-4 sm:p-6 w-full max-w-4xl mx-auto animate-in fade-in duration-500">
-        <Tabs defaultValue="account" className="w-full">
+        <Tabs defaultValue={initialTab} className="w-full">
           <div className="mb-6 border-b border-border/50 pb-2 overflow-x-auto no-scrollbar">
             <TabsList className="bg-transparent gap-2 w-max min-w-full justify-start p-0">
               <TabsTrigger 

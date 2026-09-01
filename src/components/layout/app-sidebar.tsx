@@ -85,7 +85,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
-          {(isDev || session?.user?.role === "admin") && (
+          {isDev && (
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname === "/invite"}>
                 <Link href="/invite">

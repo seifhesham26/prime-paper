@@ -100,12 +100,14 @@ export function DashboardCardEditor() {
       utils.settings.getCards.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
+    onError: (err) => alert(err.message),
   });
   const updateMutation = api.settings.updateCard.useMutation({
     onSuccess: () => {
       utils.settings.getCards.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
+    onError: (err) => alert(err.message),
   });
   const deleteMutation = api.settings.deleteCard.useMutation({
     onSuccess: () => {
@@ -158,6 +160,9 @@ export function DashboardCardEditor() {
         });
       }
       setDialogOpen(false);
+    } catch {
+      // Rejected by equation validation; onError has already reported it and
+      // the dialog stays open so the equation can be corrected.
     } finally {
       setSaving(false);
     }
@@ -200,18 +205,27 @@ export function DashboardCardEditor() {
     await reorderMutation.mutateAsync({ cards: reordered });
   };
 
+  const endsWithOperator = (eq: string) => /[+\-*/]\s*$/.test(eq);
+
+  // Appending " + token" after the user already chose an operator produced
+  // "X * + Y", which is not a valid equation.
   const insertVariable = (token: string) => {
-    setForm((prev) => ({
-      ...prev,
-      equation: prev.equation ? `${prev.equation} + ${token}` : token,
-    }));
+    setForm((prev) => {
+      if (!prev.equation.trim()) return { ...prev, equation: token };
+      if (endsWithOperator(prev.equation))
+        return { ...prev, equation: `${prev.equation}${token}` };
+      return { ...prev, equation: `${prev.equation} + ${token}` };
+    });
   };
 
   const insertOperator = (op: string) => {
-    setForm((prev) => ({
-      ...prev,
-      equation: prev.equation ? `${prev.equation} ${op} ` : "",
-    }));
+    setForm((prev) => {
+      if (!prev.equation.trim()) return prev;
+      const base = endsWithOperator(prev.equation)
+        ? prev.equation.replace(/[+\-*/]\s*$/, "")
+        : prev.equation;
+      return { ...prev, equation: `${base.trimEnd()} ${op} ` };
+    });
   };
 
   if (isLoading) {
