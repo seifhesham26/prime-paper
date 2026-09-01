@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { dimensionSchema } from "@/server/shared/validation";
 
 export const CreateProductSchema = z.object({
-  rawMaterialId: z.string().uuid().optional(),
+  rawMaterialTypeId: z.string().uuid().optional(),
   dateProduced: z.date(),
-  lengthM: z.string().min(1, "Length is required"),
-  widthCm: z.string().min(1, "Width is required"),
-  weightKg: z.string().min(1, "Weight is required"),
+  lengthM: dimensionSchema,
+  widthCm: dimensionSchema,
+  weightKg: dimensionSchema,
   quantity: z.number().int().positive(),
   notes: z.string().optional(),
 });
@@ -15,8 +16,9 @@ export const UpdateProductSchema = CreateProductSchema.extend({
 });
 
 export const GetProductsSchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(10),
+  page: z.number().int().min(1).default(1),
+  /** Fetching to fill a picker rather than to page a table. */
+  forDropdown: z.boolean().default(false),
 });
 
 export const DeleteProductSchema = z.object({
@@ -26,7 +28,7 @@ export const DeleteProductSchema = z.object({
 // Defining output types manually mapping to db columns
 export type Product = {
   id: string;
-  rawMaterialId: string | null;
+  rawMaterialTypeId: string | null;
   dateProduced: Date;
   lengthM: string;
   widthCm: string;
@@ -34,5 +36,5 @@ export type Product = {
   quantity: number;
   notes: string | null;
   createdAt: Date;
-  supplierName: string | null;
+  materialName: string | null;
 };

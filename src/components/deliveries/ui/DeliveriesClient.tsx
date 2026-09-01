@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { api } from "@/trpc/react";
@@ -34,14 +35,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Plus, Trash2, Truck, Eye, X, Loader2 } from "lucide-react";
-
-type Product = {
-  id: string;
-  lengthM: string;
-  widthCm: string;
-  weightKg: string;
-};
 
 function PaymentBadge({ status }: { status: "paid" | "partial" | "unpaid" | null }) {
   const t = useTranslations("deliveries");
@@ -59,7 +54,7 @@ function PaymentBadge({ status }: { status: "paid" | "partial" | "unpaid" | null
   );
 }
 
-export function DeliveriesClient({ products }: { products: Product[] }) {
+export function DeliveriesClient() {
   const t = useTranslations("deliveries");
   const locale = useLocale();
   const isArabic = locale === "ar";
@@ -69,31 +64,41 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
   const utils = api.useUtils();
   
   // Real-time data fetching
-  const { data: deliveriesData, isLoading: isLoadingDeliveries } = api.deliveries.getAll.useQuery({ page: 1, limit: 100 });
-  const { data: companiesData } = api.companies.getAll.useQuery({ page: 1, limit: 1000 });
+  const searchParams = useSearchParams();
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
+
+  const { data: deliveriesData, isLoading: isLoadingDeliveries } =
+    api.deliveries.getAll.useQuery({ page });
+  const { data: companiesData } = api.companies.getAll.useQuery({ page: 1, forDropdown: true });
+  // Fetched live so a product added moments ago is selectable without a reload.
+  const { data: productsData } = api.products.getAll.useQuery({ page: 1, forDropdown: true });
+  const products = productsData?.data ?? [];
   
   const createMutation = api.deliveries.create.useMutation({
     onSuccess: () => {
       utils.deliveries.getAll.invalidate();
+      utils.analytics.getDashboardStats.invalidate();
+      utils.analytics.evaluateCards.invalidate();
       setOpen(false);
       resetForm();
     },
+    onError: (err) => alert(err.message),
   });
 
   const deleteMutation = api.deliveries.delete.useMutation({
     onSuccess: () => {
       utils.deliveries.getAll.invalidate();
       utils.analytics.getDashboardStats.invalidate();
+      utils.analytics.evaluateCards.invalidate();
     },
+    onError: (err) => alert(err.message),
   });
 
   const [selectedCompany, setSelectedCompany] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<"paid" | "partial" | "unpaid">("unpaid");
   const [items, setItems] = useState<{ productId: string; quantity: number }[]>([]);
 
   const resetForm = () => {
     setSelectedCompany("");
-    setSelectedStatus("unpaid");
     setItems([]);
   };
 
@@ -124,7 +129,6 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
       date: new Date(dateStr),
       companyId: selectedCompany,
       sellingPriceEgp: formData.get("sellingPriceEgp") as string,
-      paymentStatus: selectedStatus,
       notes: formData.get("notes") as string || undefined,
       items: items.filter((i) => i.productId),
     });
@@ -196,7 +200,7 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="sellingPriceEgp" className="text-muted-foreground">{t("sellingPrice")}</Label>
                   <Input
@@ -208,22 +212,6 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
                     dir="ltr"
                     className="bg-muted/50"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">{t("paymentStatus")}</Label>
-                  <Select
-                    value={selectedStatus}
-                    onValueChange={(v) => setSelectedStatus(v as "paid" | "partial" | "unpaid")}
-                  >
-                    <SelectTrigger className="bg-muted/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="paid">{t("paid")}</SelectItem>
-                      <SelectItem value="partial">{t("partial")}</SelectItem>
-                      <SelectItem value="unpaid">{t("unpaid")}</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
@@ -374,6 +362,13 @@ export function DeliveriesClient({ products }: { products: Product[] }) {
                 ))}
               </TableBody>
             </Table>
+            {deliveriesData && deliveriesData.totalPages > 1 && (
+              <PaginationControls
+                currentPage={page}
+                totalPages={deliveriesData.totalPages}
+                totalItems={deliveriesData.total}
+              />
+            )}
           </CardContent>
         </Card>
       )}

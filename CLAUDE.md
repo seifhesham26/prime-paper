@@ -15,20 +15,28 @@ pnpm dev            # next dev
 pnpm build          # next build
 pnpm start          # next start
 pnpm lint           # eslint (flat config, eslint-config-next core-web-vitals + typescript)
+pnpm test           # vitest, pure logic only
+pnpm test:watch
 npx tsc --noEmit    # typecheck (no dedicated script)
 ```
+
+If `pnpm` is not on PATH, `corepack pnpm <cmd>` works — corepack ships with Node.
 
 Database (drizzle-kit is a devDependency; there are no db scripts in package.json):
 
 ```bash
 pnpm drizzle-kit generate   # emit SQL migration from src/db/schema.ts into drizzle/
-pnpm drizzle-kit migrate    # apply migrations
-pnpm drizzle-kit push       # push schema directly (used during development)
 pnpm drizzle-kit studio
-node src/scripts/seed-settings.mjs   # seed system_settings + default dashboard_cards
+node src/scripts/seed-settings.mjs   # idempotent: upserts settings + default cards
 ```
 
-Requires `DATABASE_URL` (Neon PostgreSQL) in `.env`. There is **no test framework** in this repo — verify changes by running the app.
+Requires `DATABASE_URL` (Neon PostgreSQL) in `.env`.
+
+**Migrations, in practice.** The database was built with `push`, so `drizzle.__drizzle_migrations` is empty while `0000` is applied — `drizzle-kit migrate` would try to replay it and fail. Apply new migration SQL directly instead. `drizzle-kit migrate` also hangs on this setup (it wants a websocket connection the http driver doesn't provide).
+
+**`generate` prompts and cannot be answered non-interactively.** When a diff both creates and deletes tables, drizzle asks whether it's a rename, and there is no flag to skip it. The way around it is two migrations: one purely additive, then one purely subtractive. Neither is ambiguous, so neither prompts. `drizzle/0001` and `0002` were produced this way.
+
+**Tests cover pure logic only** — no DB or component tests. Anything DB-coupled must have its logic extracted to be testable (see `equation-parser.ts` vs `equation-variables.ts`).
 
 ## Architecture
 
@@ -100,22 +108,28 @@ Locale comes from a `locale` cookie, defaulting to `ar` (`src/i18n/request.ts`);
 - Zod schemas belong in `types.ts` and are the single source of both runtime validation and TS types (`z.infer<typeof Schema>`).
 - Section comments use the `// ─── Title ───` box-drawing style; match it in files that already use it.
 
-## Known landmines
+## Invariants — don't break these
 
-Verified against the code, not the docs. Don't assume any of these are already handled:
+- **Raw material stock is derived, never stored.** `balance = SUM(receipts) − SUM(consumptions)`. There is no balance column; do not add one.
+- **Compute the balance with scalar subqueries, never two `LEFT JOIN`s under one `GROUP BY`.** The join fans out and inflates both sums — verified: 3 receipts + 2 consumptions reported 21.000 t instead of 10.500 t. See `types.db.ts`.
+- **Never interpolate a drizzle column into a correlated subquery.** `sql\`... WHERE r.type_id = ${rawMaterialTypes.id}\`` renders the column **unqualified** as `"id"`, which Postgres then binds to the *subquery's* table. It matches nothing, `SUM` returns NULL, and every total silently reads 0 — no error, and it typechecks. Write the outer column as literal text (`raw_material_types.id`). This bit once already; check `.toSQL()` when writing correlated subqueries.
+- **Weight leaves only via a consumption entry.** Creating a product does *not* deduct anything; `products.rawMaterialTypeId` is informational. This is deliberate — the owner records consumption by hand.
+- **Balance comparisons run on integers**, via `toUnits(value, scale)`. Never compare decimal strings as floats; `2.9999999996 !== 3` will bite.
+- **`paymentStatus` is always derived** from the payments recorded. It is not an input on any schema. Anything that changes payments or a delivery's price must call `recomputeDeliveryStatus`.
+- **`derivePaymentStatus` (TS) and `PAYMENT_STATUS_SQL` encode the same rule** and live together in `deliveries/status.ts`. Change both or neither.
+- **Outstanding is `SUM(MAX(price − paid, 0))` per delivery.** Overpayment is allowed, so a global "prices minus all payments" would let one overpaid delivery cancel another's debt.
+- **Money and measure fields use the helpers in `shared/validation.ts`**, never bare `z.string()`.
+- **Roles: `dev` > `admin` > everything else.** `dev` is bootstrap-only (first account) and the only role that can administer accounts. `admin` writes data. Better Auth needs `dev` declared in the `roles`/`adminRoles` config in `auth.ts` or its admin API rejects dev users.
+- **Equation tokens live in `analytics/equation-variables.ts`.** Adding a metric means a resolver *and* an `EQUATION_VARIABLES` entry. Old tokens stay in `ALIASES` so saved cards don't silently render zero. Equations are validated on save; a bad one errors rather than showing `0`.
+- **Settings must be declared in `settings/registry.ts`** before anything reads them, and are consumed via `getSettingsMap()`. An undeclared key is editable but inert.
+- **Both message files move together.** 257 keys each; parity is checked by the script in the plan's Task 21.
 
-- **The invite role selector is a no-op.** `/invite` passes `role` to `authClient.admin.createUser`, but the `databaseHooks` hook in `src/lib/auth.ts` overwrites it with `"dev"`, so every invited user gets full write access. Fixing the hook to only apply on self-signup is the intended shape.
-- **`paymentStatus` has two sources of truth.** `CreateDeliverySchema` lets the user pick it, but `insertPayment` recomputes it from the payment sum. A delivery created as `"paid"` with no payments stays `"paid"` while `remaining` shows the full price.
-- **`outstandingPayments` double-counts.** `getDashboardStats` computes `unpaid + partial - ALL payments`, subtracting payments that belong to already-`paid` deliveries. The seeded "Outstanding Payments" dashboard card uses the same wrong equation.
-- **Money/measure fields are only `z.string().min(1)`** — no numeric validation anywhere. Non-numeric input reaches Postgres as a raw `decimal` cast error, and `weightTons: "0"` makes `costPerTon` `Infinity`.
-- **No transactions.** The neon-http driver can't do interactive transactions, so `insertDelivery` writes the delivery and its items as separate statements and can half-fail.
-- **`createdBy` is dead on every table.** The column exists on 5 tables and no insert ever populates it; services take only `input`, never `ctx.session`.
-- **Deliveries can't be edited and payments can't be edited or deleted** — only create/delete on deliveries, create on payments.
-- **Deleting a referenced row throws a raw FK error** (company with deliveries, product in delivery_items, raw material with products). Only `delivery_items`/`payments` cascade, and only from `deliveries`.
-- **Delivering does not decrement `products.quantity`.** There is no stock/consumption model anywhere.
-- **Pagination is dead code.** `PaginationControls`, `InfiniteScrollSpinner`, and `useInfiniteScroll` are never imported; every list hardcodes `{ page: 1, limit: 100 }`, silently capping the UI at 100 rows.
-- **Most `system_settings` keys are decorative.** Only `allow_public_signup` is read. `page_size_default`, `dropdown_list_limit`, `dashboard_recent_deliveries`, `dashboard_top_unpaid`, and `dashboard_chart_months` are editable in Settings but read by nothing.
-- **Unused files:** `src/app/(app)/dashboard-client.tsx` (superseded by `AnalyticsClient`), `src/scripts/seed-settings.ts` (uses the `@/` alias so it can't run — the `.mjs` twin is the live one), and the `invitation` table in `drizzle/0000_ambiguous_patch.sql`, which `schema.ts` doesn't define.
+## Still open
+
+- Two accounts exist and both are `dev` (`seiffmuhammad199@`, `seifelden484@`). The second predates the role fix and probably wants demoting.
+- Dashboard has both a legacy "Total Raw Materials" card (lifetime intake, via alias) and the new "Raw Material Balance" card. Harmless duplicate; hide one in Settings if unwanted.
+- `pnpm lint` reports one pre-existing error in shadcn's `src/components/ui/sidebar.tsx` (`Math.random` during render). Untouched — don't mistake it for new breakage.
+- Better Auth logs a startup warning that no base URL is set; set `BETTER_AUTH_URL` to silence it.
 
 ## `docs/`
 

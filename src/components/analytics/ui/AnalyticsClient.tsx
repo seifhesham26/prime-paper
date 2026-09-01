@@ -29,6 +29,15 @@ import {
 } from "recharts";
 import { StatCard } from "./StatCard";
 
+// Static map, not `lg:grid-cols-${n}` — Tailwind scans source text, so an
+// interpolated class name is never generated and the grid silently breaks.
+const COLUMN_CLASS: Record<number, string> = {
+  1: "lg:grid-cols-1",
+  2: "lg:grid-cols-2",
+  3: "lg:grid-cols-3",
+  4: "lg:grid-cols-4",
+};
+
 export function AnalyticsClient() {
   const t = useTranslations("dashboard");
   const ts = useTranslations("settings");
@@ -76,7 +85,7 @@ export function AnalyticsClient() {
           </Button>
         </div>
       )}
-      <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-${Math.min(dynamicCards?.length || 4, 4)}`}>
+      <div className={`grid gap-4 sm:grid-cols-2 ${COLUMN_CLASS[Math.min(Math.max(dynamicCards?.length ?? 4, 1), 4)]}`}>
         {dynamicCards ? dynamicCards.map((card) => (
           <StatCard
             key={card.id}
@@ -85,6 +94,7 @@ export function AnalyticsClient() {
             unit={unitLabels[card.unit] ?? card.unit}
             icon={card.icon}
             gradient={card.gradient}
+            error={card.error}
           />
         )) : (
           // Fallback while loading dynamic cards

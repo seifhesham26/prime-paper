@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
@@ -32,22 +33,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Plus, Pencil, Trash2, Factory, Loader2 } from "lucide-react";
 
 import type { Product } from "@/server/products/types";
 
-type RawMaterial = {
-  id: string;
-  supplierName: string;
-  dateReceived: string;
-  weightTons: string;
-};
-
-export function ProductsClient({
-  rawMaterials,
-}: {
-  rawMaterials: RawMaterial[];
-}) {
+export function ProductsClient() {
   const t = useTranslations("products");
   const locale = useLocale();
   const isArabic = locale === "ar";
@@ -55,11 +46,17 @@ export function ProductsClient({
   
   const [open, setOpen] = useState(false);
   const [editItem, setEditItem] = useState<Product | null>(null);
-  const [selectedRawMaterial, setSelectedRawMaterial] = useState<string>("");
+  const [selectedMaterialType, setSelectedMaterialType] = useState<string>("");
 
   const utils = api.useUtils();
   
-  const { data: productsData, isLoading } = api.products.getAll.useQuery({ page: 1, limit: 100 });
+  const searchParams = useSearchParams();
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
+
+  const { data: productsData, isLoading } = api.products.getAll.useQuery({ page });
+  // Fetched live so a material added moments ago is selectable without a reload.
+  const { data: typesData } = api.rawMaterials.getAll.useQuery({ page: 1, forDropdown: true });
+  const materialTypes = typesData?.data ?? [];
   
   const createMutation = api.products.create.useMutation({
     onSuccess: () => {
@@ -80,19 +77,23 @@ export function ProductsClient({
   const deleteMutation = api.products.delete.useMutation({
     onSuccess: () => {
       utils.products.getAll.invalidate();
+      utils.analytics.getDashboardStats.invalidate();
+      utils.analytics.evaluateCards.invalidate();
     },
+    // Surfaces the "appears in a delivery" guard.
+    onError: (err) => alert(err.message),
   });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const resetForm = () => {
     setEditItem(null);
-    setSelectedRawMaterial("");
+    setSelectedMaterialType("");
   };
 
   const handleEdit = (item: Product) => {
     setEditItem(item);
-    setSelectedRawMaterial(item.rawMaterialId || "");
+    setSelectedMaterialType(item.rawMaterialTypeId || "");
     setOpen(true);
   };
 
@@ -108,7 +109,7 @@ export function ProductsClient({
     const dateStr = formData.get("dateProduced") as string;
 
     const payload = {
-      rawMaterialId: selectedRawMaterial || undefined,
+      rawMaterialTypeId: selectedMaterialType || undefined,
       dateProduced: new Date(dateStr),
       lengthM: formData.get("lengthM") as string,
       widthCm: formData.get("widthCm") as string,
@@ -167,16 +168,16 @@ export function ProductsClient({
               <div className="space-y-2">
                 <Label className="text-muted-foreground">{t("rawMaterial")}</Label>
                 <Select
-                  value={selectedRawMaterial}
-                  onValueChange={setSelectedRawMaterial}
+                  value={selectedMaterialType}
+                  onValueChange={setSelectedMaterialType}
                 >
                   <SelectTrigger className="bg-muted/50 focus-visible:ring-primary/50 transition-shadow">
                     <SelectValue placeholder={t("selectRawMaterial")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {rawMaterials.map((rm) => (
+                    {materialTypes.map((rm) => (
                       <SelectItem key={rm.id} value={rm.id}>
-                        {rm.supplierName} - {new Date(rm.dateReceived).toLocaleDateString(isArabic ? "ar-EG" : "en-US")} ({rm.weightTons} {isArabic ? "طن" : "tons"})
+                        {rm.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -305,7 +306,7 @@ export function ProductsClient({
                     <TableCell dir="ltr" className="text-start whitespace-nowrap">
                       {new Date(p.dateProduced).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{p.supplierName || "-"}</TableCell>
+                    <TableCell className="text-muted-foreground">{p.materialName || "-"}</TableCell>
                     <TableCell className="text-center font-medium" dir="ltr">
                       {p.lengthM}
                     </TableCell>
@@ -343,6 +344,13 @@ export function ProductsClient({
                 ))}
               </TableBody>
             </Table>
+            {productsData && productsData.totalPages > 1 && (
+              <PaginationControls
+                currentPage={page}
+                totalPages={productsData.totalPages}
+                totalItems={productsData.total}
+              />
+            )}
           </CardContent>
         </Card>
       )}

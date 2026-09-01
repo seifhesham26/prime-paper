@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
@@ -25,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Plus, Pencil, Trash2, Building2, Loader2 } from "lucide-react";
 
 import type { Company } from "@/server/companies/types";
@@ -39,7 +41,10 @@ export function CompaniesClient() {
   
   // We use useQuery for initial load but want to keep it simple without infinite scrolling for this refactor demo
   // A production app would likely integrate `useInfiniteQuery` with tRPC if needed
-  const { data, isLoading } = api.companies.getAll.useQuery({ page: 1, limit: 100 });
+  const searchParams = useSearchParams();
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
+
+  const { data, isLoading } = api.companies.getAll.useQuery({ page });
   
   const createMutation = api.companies.create.useMutation({
     onSuccess: () => {
@@ -60,7 +65,10 @@ export function CompaniesClient() {
   const deleteMutation = api.companies.delete.useMutation({
     onSuccess: () => {
       utils.companies.getAll.invalidate();
+      utils.analytics.getDashboardStats.invalidate();
     },
+    // Surfaces the "still has deliveries" guard.
+    onError: (err) => alert(err.message),
   });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -257,6 +265,13 @@ export function CompaniesClient() {
                 ))}
               </TableBody>
             </Table>
+            {data && data.totalPages > 1 && (
+              <PaginationControls
+                currentPage={page}
+                totalPages={data.totalPages}
+                totalItems={data.total}
+              />
+            )}
           </CardContent>
         </Card>
       )}

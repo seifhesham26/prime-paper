@@ -1,33 +1,57 @@
 import { z } from "zod";
+import { moneySchema, weightTonsSchema } from "@/server/shared/validation";
 
-export const CreateRawMaterialSchema = z.object({
-  dateReceived: z.date(),
-  supplierName: z.string().min(1, "Supplier name is required"),
-  weightTons: z.string().min(1, "Weight in tons is required"),
-  costEgp: z.string().min(1, "Cost in EGP is required"),
+// ─── Types (Parent Material) ─────────────────────────────
+export const CreateTypeSchema = z.object({
+  name: z.string().trim().min(1, "Name is required"),
   notes: z.string().optional(),
 });
 
-export const UpdateRawMaterialSchema = CreateRawMaterialSchema.extend({
+export const UpdateTypeSchema = CreateTypeSchema.extend({
   id: z.string().uuid(),
 });
 
-export const GetRawMaterialsSchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(10),
+export const GetTypesSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  /** Fetching to fill a picker rather than to page a table. */
+  forDropdown: z.boolean().default(false),
 });
 
-export const DeleteRawMaterialSchema = z.object({
+export const IdSchema = z.object({ id: z.string().uuid() });
+
+// ─── Receipts ────────────────────────────────────────────
+export const CreateReceiptSchema = z.object({
+  typeId: z.string().uuid(),
+  dateReceived: z.date(),
+  weightTons: weightTonsSchema,
+  costEgp: moneySchema,
+  notes: z.string().optional(),
+});
+
+export const UpdateReceiptSchema = CreateReceiptSchema.omit({ typeId: true }).extend({
   id: z.string().uuid(),
 });
 
-export type RawMaterial = {
+// ─── Consumptions ────────────────────────────────────────
+export const CreateConsumptionSchema = z.object({
+  typeId: z.string().uuid(),
+  date: z.date(),
+  weightTons: weightTonsSchema,
+  notes: z.string().optional(),
+});
+
+export const UpdateConsumptionSchema = CreateConsumptionSchema.omit({ typeId: true }).extend({
+  id: z.string().uuid(),
+});
+
+export type RawMaterialType = {
   id: string;
-  dateReceived: Date;
-  supplierName: string;
-  weightTons: string;
-  costEgp: string;
-  costPerTon: string | null;
+  name: string;
   notes: string | null;
   createdAt: Date;
+  receivedTons: string;
+  consumedTons: string;
+  balanceTons: string;
+  totalCostEgp: string;
+  avgCostPerTon: string | null;
 };

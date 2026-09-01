@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowRight, ArrowLeft, Plus, CreditCard, Loader2, PackageOpen } from "lucide-react";
+import { ArrowRight, ArrowLeft, Plus, CreditCard, Loader2, PackageOpen, Trash2 } from "lucide-react";
 
 function PaymentBadge({ status }: { status: string | null }) {
   const t = useTranslations("deliveries");
@@ -54,12 +54,25 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
   const utils = api.useUtils();
   const { data: delivery, isLoading } = api.deliveries.getById.useQuery({ id: deliveryId });
 
+  const invalidate = () => {
+    utils.deliveries.getById.invalidate({ id: deliveryId });
+    utils.deliveries.getAll.invalidate();
+    utils.analytics.getDashboardStats.invalidate();
+    utils.analytics.evaluateCards.invalidate();
+  };
+
   const addPaymentMutation = api.deliveries.addPayment.useMutation({
     onSuccess: () => {
-      utils.deliveries.getById.invalidate({ id: deliveryId });
-      utils.deliveries.getAll.invalidate();
+      invalidate();
       setPaymentOpen(false);
     },
+    onError: (err) => alert(err.message),
+  });
+
+  // Deleting a payment recomputes the delivery's status server-side.
+  const deletePaymentMutation = api.deliveries.deletePayment.useMutation({
+    onSuccess: invalidate,
+    onError: (err) => alert(err.message),
   });
 
   if (isLoading) {
@@ -283,6 +296,7 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
                     <TableHead className="font-semibold">{t("paymentDate")}</TableHead>
                     <TableHead className="text-center font-semibold">{t("amount")}</TableHead>
                     <TableHead className="font-semibold">{t("notes")}</TableHead>
+                    {canWrite && <TableHead className="w-[50px]" />}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -295,6 +309,24 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
                         {Number(p.amountEgp).toLocaleString()} EGP
                       </TableCell>
                       <TableCell className="text-muted-foreground max-w-[150px] truncate">{p.notes || "-"}</TableCell>
+                      {canWrite && (
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                            title={t("deletePayment")}
+                            onClick={() => {
+                              if (confirm(t("confirmDeletePayment"))) {
+                                deletePaymentMutation.mutate({ id: p.id });
+                              }
+                            }}
+                            disabled={deletePaymentMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

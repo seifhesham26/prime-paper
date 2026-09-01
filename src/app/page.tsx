@@ -4,10 +4,15 @@ import { ScrollText, ArrowRight, ShieldCheck, Zap, Globe, PackageOpen } from "lu
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { getSettingByKey } from "@/server/settings/db";
 
 export default async function LandingPage() {
   const t = await getTranslations("landing");
   const session = await auth.api.getSession({ headers: await headers() });
+
+  // /auth/signup 404s when public signup is off, so the CTA must not point
+  // there or it sends visitors into a dead end.
+  const allowSignup = (await getSettingByKey("allow_public_signup"))?.value === "true";
 
   return (
     <div className="min-h-screen bg-background selection:bg-primary/30 flex flex-col overflow-x-hidden">
@@ -31,11 +36,13 @@ export default async function LandingPage() {
             ) : (
               <>
                 <Button asChild variant="ghost">
-                  <Link href="/auth/login">Login</Link>
+                  <Link href="/auth/login">{t("login")}</Link>
                 </Button>
-                <Button asChild className="shadow-lg hover:shadow-primary/20 transition-all">
-                  <Link href="/auth/signup">{t("getStarted")}</Link>
-                </Button>
+                {allowSignup && (
+                  <Button asChild className="shadow-lg hover:shadow-primary/20 transition-all">
+                    <Link href="/auth/signup">{t("getStarted")}</Link>
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -67,21 +74,21 @@ export default async function LandingPage() {
 
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
               <Button asChild size="lg" className="h-14 px-8 text-md rounded-2xl shadow-xl hover:shadow-primary/25 transition-all gap-2 group">
-                 <Link href={session ? "/dashboard" : "/auth/signup"}>
-                    {session ? t("viewDashboard") : t("getStarted")}
+                 <Link href={session ? "/dashboard" : allowSignup ? "/auth/signup" : "/auth/login"}>
+                    {session ? t("viewDashboard") : allowSignup ? t("getStarted") : t("login")}
                     <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1 rtl:rotate-180" />
                  </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="h-14 px-8 text-md rounded-2xl border-2 hover:bg-muted/50 transition-colors">
-                 <Link href="/auth/login">Access Management Portal</Link>
+                 <Link href="/auth/login">{t("accessPortal")}</Link>
               </Button>
             </div>
             
             {/* Trust Badges/Features */}
             <div className="pt-10 flex flex-wrap gap-8 items-center justify-center lg:justify-start grayscale opacity-60">
-               <div className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-5 w-5" /> Enterprise Secure</div>
-               <div className="flex items-center gap-2 font-semibold"><Globe className="h-5 w-5" /> Multi-lingual Support</div>
-               <div className="flex items-center gap-2 font-semibold"><PackageOpen className="h-5 w-5" /> Inventory Optimized</div>
+               <div className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-5 w-5" /> {t("badgeSecure")}</div>
+               <div className="flex items-center gap-2 font-semibold"><Globe className="h-5 w-5" /> {t("badgeMultilingual")}</div>
+               <div className="flex items-center gap-2 font-semibold"><PackageOpen className="h-5 w-5" /> {t("badgeInventory")}</div>
             </div>
           </div>
 
@@ -113,7 +120,7 @@ export default async function LandingPage() {
              <div className="absolute -top-6 -right-6 h-20 w-56 bg-emerald-500/10 backdrop-blur-md rounded-2xl border border-emerald-500/20 p-4 flex items-center gap-4 shadow-xl animate-bounce duration-3000">
                 <div className="h-10 w-10 bg-emerald-500 rounded-full flex items-center justify-center font-bold text-white shadow-lg">✓</div>
                 <div>
-                   <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Production Yield</p>
+                   <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{t("productionYield")}</p>
                    <p className="text-lg font-black">+94%</p>
                 </div>
              </div>
@@ -124,12 +131,7 @@ export default async function LandingPage() {
       {/* Basic Footer */}
       <footer className="border-t border-border mt-auto py-12 bg-muted/20">
          <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-muted-foreground text-sm">© 2026 Prime Paper Company. Professional Factory Management.</p>
-            <div className="flex gap-8 text-sm font-medium text-muted-foreground">
-               <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>
-               <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
-               <Link href="#" className="hover:text-foreground transition-colors">Contact Support</Link>
-            </div>
+            <p className="text-muted-foreground text-sm">{t("copyright")}</p>
          </div>
       </footer>
     </div>

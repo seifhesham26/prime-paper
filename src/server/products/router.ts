@@ -1,29 +1,36 @@
 import { createTRPCRouter, protectedProcedure, writerProcedure } from "../trpc";
-import { getProductsService, createProductService, updateProductService, deleteProductService } from "./services";
-import { CreateProductSchema, GetProductsSchema, UpdateProductSchema, DeleteProductSchema } from "./types";
+import { getSettingsMap } from "../settings/db";
+import {
+  getProductsService,
+  createProductService,
+  updateProductService,
+  deleteProductService,
+} from "./services";
+import {
+  CreateProductSchema,
+  GetProductsSchema,
+  UpdateProductSchema,
+  DeleteProductSchema,
+} from "./types";
 
 export const productsRouter = createTRPCRouter({
-  getAll: protectedProcedure
-    .input(GetProductsSchema)
-    .query(async ({ input }) => {
-      return await getProductsService(input.page, input.limit);
-    }),
+  getAll: protectedProcedure.input(GetProductsSchema).query(async ({ input }) => {
+    const settings = await getSettingsMap();
+    return getProductsService(
+      input.page,
+      input.forDropdown ? settings.dropdownListLimit : settings.pageSizeDefault,
+    );
+  }),
 
   create: writerProcedure
     .input(CreateProductSchema)
-    .mutation(async ({ input }) => {
-      return await createProductService(input);
-    }),
+    .mutation(async ({ input, ctx }) => createProductService(input, ctx.session.user.id)),
 
   update: writerProcedure
     .input(UpdateProductSchema)
-    .mutation(async ({ input }) => {
-      return await updateProductService(input);
-    }),
+    .mutation(async ({ input }) => updateProductService(input)),
 
   delete: writerProcedure
     .input(DeleteProductSchema)
-    .mutation(async ({ input }) => {
-      return await deleteProductService(input.id);
-    }),
+    .mutation(async ({ input }) => deleteProductService(input.id)),
 });

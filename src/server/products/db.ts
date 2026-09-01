@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { products, rawMaterials } from "@/db/schema";
+import { products, rawMaterialTypes, deliveryItems } from "@/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import type { z } from "zod";
 import type { CreateProductSchema, UpdateProductSchema } from "./types";
@@ -13,7 +13,7 @@ export async function findProducts(page = 1, limit = 10) {
   const data = await db
     .select({
       id: products.id,
-      rawMaterialId: products.rawMaterialId,
+      rawMaterialTypeId: products.rawMaterialTypeId,
       dateProduced: products.dateProduced,
       lengthM: products.lengthM,
       widthCm: products.widthCm,
@@ -21,10 +21,10 @@ export async function findProducts(page = 1, limit = 10) {
       quantity: products.quantity,
       notes: products.notes,
       createdAt: products.createdAt,
-      supplierName: rawMaterials.supplierName,
+      materialName: rawMaterialTypes.name,
     })
     .from(products)
-    .leftJoin(rawMaterials, eq(products.rawMaterialId, rawMaterials.id))
+    .leftJoin(rawMaterialTypes, eq(products.rawMaterialTypeId, rawMaterialTypes.id))
     .orderBy(desc(products.dateProduced))
     .limit(limit)
     .offset(offset);
@@ -32,20 +32,36 @@ export async function findProducts(page = 1, limit = 10) {
   return {
     data,
     total,
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.max(1, Math.ceil(total / limit)),
   };
 }
 
-export async function insertProduct(data: z.infer<typeof CreateProductSchema>) {
-  const [newProduct] = await db.insert(products).values({
-    rawMaterialId: data.rawMaterialId || null,
-    dateProduced: data.dateProduced,
-    lengthM: data.lengthM,
-    widthCm: data.widthCm,
-    weightKg: data.weightKg,
-    quantity: data.quantity,
-    notes: data.notes || null,
-  }).returning();
+/** Blocks deletion of a product that a delivery still refers to. */
+export async function countProductDeliveryItems(id: string) {
+  const [row] = await db
+    .select({ count: sql<string>`count(*)` })
+    .from(deliveryItems)
+    .where(eq(deliveryItems.productId, id));
+  return Number(row?.count || 0);
+}
+
+export async function insertProduct(
+  data: z.infer<typeof CreateProductSchema>,
+  userId: string,
+) {
+  const [newProduct] = await db
+    .insert(products)
+    .values({
+      rawMaterialTypeId: data.rawMaterialTypeId || null,
+      dateProduced: data.dateProduced,
+      lengthM: data.lengthM,
+      widthCm: data.widthCm,
+      weightKg: data.weightKg,
+      quantity: data.quantity,
+      notes: data.notes || null,
+      createdBy: userId,
+    })
+    .returning();
   return newProduct;
 }
 
@@ -53,7 +69,7 @@ export async function editProduct(data: z.infer<typeof UpdateProductSchema>) {
   const [updatedProduct] = await db
     .update(products)
     .set({
-      rawMaterialId: data.rawMaterialId || null,
+      rawMaterialTypeId: data.rawMaterialTypeId || null,
       dateProduced: data.dateProduced,
       lengthM: data.lengthM,
       widthCm: data.widthCm,

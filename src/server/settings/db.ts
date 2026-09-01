@@ -1,11 +1,43 @@
 import { db } from "@/db";
 import { systemSettings, dashboardCards } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
+import { SETTINGS_BY_KEY, type SettingsMap } from "./registry";
 
 // ─── System Settings ─────────────────────────────────────
 
 export async function getAllSettings() {
   return db.select().from(systemSettings);
+}
+
+function coerce(key: string, raw: string | undefined): number {
+  const def = SETTINGS_BY_KEY.get(key);
+  if (!def || def.type !== "int") throw new Error(`Not an int setting: ${key}`);
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < def.min || n > def.max) return def.default;
+  return n;
+}
+
+/**
+ * The settings the application reads, with validated fallbacks so a bad
+ * stored value degrades to the default rather than breaking a page.
+ */
+export async function getSettingsMap(): Promise<SettingsMap> {
+  const rows = await getAllSettings();
+  const stored = new Map(rows.map((r) => [r.key, r.value]));
+
+  return {
+    pageSizeDefault: coerce("page_size_default", stored.get("page_size_default")),
+    dropdownListLimit: coerce("dropdown_list_limit", stored.get("dropdown_list_limit")),
+    dashboardRecentDeliveries: coerce(
+      "dashboard_recent_deliveries",
+      stored.get("dashboard_recent_deliveries"),
+    ),
+    dashboardTopUnpaid: coerce("dashboard_top_unpaid", stored.get("dashboard_top_unpaid")),
+    dashboardChartMonths: coerce(
+      "dashboard_chart_months",
+      stored.get("dashboard_chart_months"),
+    ),
+  };
 }
 
 export async function getSettingByKey(key: string) {

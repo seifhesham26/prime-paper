@@ -1,29 +1,41 @@
 import { z } from "zod";
+import { moneySchema, positiveMoneySchema } from "@/server/shared/validation";
 
 const DeliveryItemSchema = z.object({
   productId: z.string().uuid(),
-  quantity: z.number().positive(),
+  quantity: z.number().int().positive(),
 });
 
+// paymentStatus is deliberately absent — it is always derived from the
+// payments recorded against the delivery, never chosen by the user.
 export const CreateDeliverySchema = z.object({
   date: z.date(),
   companyId: z.string().uuid(),
-  sellingPriceEgp: z.string().min(1, "Price is required"),
-  paymentStatus: z.enum(["paid", "partial", "unpaid"]),
+  sellingPriceEgp: moneySchema,
   notes: z.string().optional(),
   items: z.array(DeliveryItemSchema),
 });
 
+export const UpdateDeliverySchema = CreateDeliverySchema.extend({
+  id: z.string().uuid(),
+});
+
 export const AddPaymentSchema = z.object({
   deliveryId: z.string().uuid(),
-  amountEgp: z.string().min(1, "Amount is required"),
+  amountEgp: positiveMoneySchema,
+  date: z.date(),
+  notes: z.string().optional(),
+});
+
+export const UpdatePaymentSchema = z.object({
+  id: z.string().uuid(),
+  amountEgp: positiveMoneySchema,
   date: z.date(),
   notes: z.string().optional(),
 });
 
 export const GetDeliveriesSchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(10),
+  page: z.number().int().min(1).default(1),
 });
 
 export const DeleteDeliverySchema = z.object({

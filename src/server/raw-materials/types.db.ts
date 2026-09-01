@@ -10,16 +10,25 @@ import { weightedAvgCostPerTon } from "./balance";
 
 // Scalar subqueries, deliberately. Joining both child tables under one
 // GROUP BY produces a Cartesian fan-out that inflates both sums.
+//
+// The outer column is written as literal SQL text, NOT interpolated as
+// ${rawMaterialTypes.id}. Drizzle renders an interpolated column in a select
+// expression UNQUALIFIED — it emits `r.type_id = "id"`, which Postgres binds
+// to raw_material_receipts.id (the subquery's own table). That matches
+// nothing, so every sum silently came back 0 with no error.
 const receivedSql = sql<string>`COALESCE((
-  SELECT SUM(r.weight_tons) FROM raw_material_receipts r WHERE r.type_id = ${rawMaterialTypes.id}
+  SELECT SUM(r.weight_tons) FROM raw_material_receipts r
+  WHERE r.type_id = raw_material_types.id
 ), 0)`;
 
 const consumedSql = sql<string>`COALESCE((
-  SELECT SUM(c.weight_tons) FROM raw_material_consumptions c WHERE c.type_id = ${rawMaterialTypes.id}
+  SELECT SUM(c.weight_tons) FROM raw_material_consumptions c
+  WHERE c.type_id = raw_material_types.id
 ), 0)`;
 
 const totalCostSql = sql<string>`COALESCE((
-  SELECT SUM(r.cost_egp) FROM raw_material_receipts r WHERE r.type_id = ${rawMaterialTypes.id}
+  SELECT SUM(r.cost_egp) FROM raw_material_receipts r
+  WHERE r.type_id = raw_material_types.id
 ), 0)`;
 
 function withDerived<

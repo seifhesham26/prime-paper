@@ -1,15 +1,18 @@
 import { db } from "@/db";
-import { rawMaterials, products, deliveries, payments, companies } from "@/db/schema";
+import { products, deliveries, payments, companies } from "@/db/schema";
 import { sql, eq, gte, desc } from "drizzle-orm";
 import type { DashboardStats } from "./types";
+import { getSettingsMap } from "../settings/db";
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
-    const [rawMaterialsResult] = await db
-      .select({
-        total: sql<string>`COALESCE(SUM(${rawMaterials.weightTons}), 0)`,
-      })
-      .from(rawMaterials);
+    const settings = await getSettingsMap();
+
+    // Stock on hand, not lifetime intake.
+    const rawMaterialsResult = await db.execute<{ total: string }>(sql`
+      SELECT COALESCE((SELECT SUM(weight_tons) FROM raw_material_receipts), 0)
+           - COALESCE((SELECT SUM(weight_tons) FROM raw_material_consumptions), 0) AS total
+    `);
 
     const [productsResult] = await db
       .select({ total: sql<string>`COALESCE(SUM(${products.quantity}), 0)` })
@@ -26,26 +29,22 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .from(deliveries)
       .where(gte(deliveries.date, firstOfMonth));
 
-    const [totalDeliveries] = await db
-      .select({
-        total: sql<string>`COALESCE(SUM(${deliveries.sellingPriceEgp}), 0)`,
-      })
-      .from(deliveries)
-      .where(eq(deliveries.paymentStatus, "unpaid"));
+    // The positive remainder per delivery, summed. The previous formula
+    // (unpaid + partial - ALL payments) subtracted payments belonging to
+    // already-settled deliveries, understating the debt.
+    const outstandingResult = await db.execute<{ total: string }>(sql`
+      SELECT COALESCE((
+        SELECT SUM(GREATEST(d.selling_price_egp - COALESCE(p.paid, 0), 0))
+        FROM deliveries d
+        LEFT JOIN (
+          SELECT delivery_id, SUM(amount_egp) AS paid FROM payments GROUP BY delivery_id
+        ) p ON p.delivery_id = d.id
+      ), 0) AS total
+    `);
 
-    const [totalPayments] = await db
-      .select({ total: sql<string>`COALESCE(SUM(${payments.amountEgp}), 0)` })
-      .from(payments);
-
-    const [partialDeliveries] = await db
-      .select({
-        total: sql<string>`COALESCE(SUM(${deliveries.sellingPriceEgp}), 0)`,
-      })
-      .from(deliveries)
-      .where(eq(deliveries.paymentStatus, "partial"));
-
+    const chartMonths = settings.dashboardChartMonths;
     const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - (chartMonths - 1));
     sixMonthsAgo.setDate(1);
     sixMonthsAgo.setHours(0, 0, 0, 0);
 
@@ -72,7 +71,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
     // Merge into single array filling missing months
     const monthlyDataMap = new Map<string, { month: string; revenue: number; payments: number }>();
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < chartMonths; i++) {
       const d = new Date(sixMonthsAgo);
       d.setMonth(d.getMonth() + i);
       const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -118,7 +117,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       }))
       .filter(c => c.balance > 0)
       .sort((a, b) => b.balance - a.balance)
-      .slice(0, 5);
+      .slice(0, settings.dashboardTopUnpaid);
 
     const recentDeliveriesResult = await db
       .select({
@@ -131,7 +130,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .from(deliveries)
       .leftJoin(companies, eq(deliveries.companyId, companies.id))
       .orderBy(desc(deliveries.date))
-      .limit(5);
+      .limit(settings.dashboardRecentDeliveries);
 
     const recentDeliveries = recentDeliveriesResult.map((d) => {
       // paymentStatus from schema has type 'paid' | 'partial' | 'unpaid' | null; zod wants exact.
@@ -149,13 +148,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     });
 
     return {
-      totalRawMaterials: Number(rawMaterialsResult?.total || 0),
+      totalRawMaterials: Number(rawMaterialsResult.rows[0]?.total || 0),
       totalProducts: Number(productsResult?.total || 0),
       salesThisMonth: Number(salesResult?.total || 0),
-      outstandingPayments:
-        Number(totalDeliveries?.total || 0) +
-        Number(partialDeliveries?.total || 0) -
-        Number(totalPayments?.total || 0),
+      outstandingPayments: Number(outstandingResult.rows[0]?.total || 0),
       monthlyData,
       topUnpaidCompanies,
       recentDeliveries,

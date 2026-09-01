@@ -21,12 +21,14 @@ export function StatCard({
   unit,
   icon,
   gradient,
+  error,
 }: {
   title: string;
-  value: number;
+  value: number | null;
   unit: string;
   icon: string | ElementType;
   gradient: string;
+  error?: string | null;
 }) {
   // Support both string icon names (from DB) and component refs (legacy)
   const Icon = typeof icon === "string" ? (ICON_MAP[icon] || Package) : icon;
@@ -46,12 +48,20 @@ export function StatCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold tracking-tight">
-          {value.toLocaleString()}{" "}
-          <span className="text-sm font-normal text-muted-foreground">
-            {unit}
-          </span>
-        </div>
+        {error ? (
+          // A broken equation shows a dash, never a fake zero that reads
+          // as a real figure.
+          <div className="text-2xl font-bold tracking-tight text-destructive" title={error}>
+            —
+          </div>
+        ) : (
+          <div className="text-2xl font-bold tracking-tight">
+            {value?.toLocaleString() ?? "—"}{" "}
+            <span className="text-sm font-normal text-muted-foreground">
+              {unit}
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

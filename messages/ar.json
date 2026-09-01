@@ -39,7 +39,10 @@
     "date": "التاريخ",
     "amount": "المبلغ",
     "status": "الحالة",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض الكل",
+    "paid": "مدفوع",
+    "partial": "جزئي",
+    "unpaid": "غير مدفوع"
   },
   "rawMaterials": {
     "title": "المواد الخام",
@@ -47,7 +50,7 @@
     "dateReceived": "تاريخ الاستلام",
     "supplierName": "اسم المورد",
     "weightTons": "الوزن (طن)",
-    "costEgp": "التكلفة (ج.م)",
+    "costEgp": "التكلفة (جنيه)",
     "costPerTon": "التكلفة / طن",
     "notes": "ملاحظات",
     "actions": "إجراءات",
@@ -57,7 +60,32 @@
     "cancel": "إلغاء",
     "noData": "لا توجد مواد خام بعد",
     "emptyStateDesc": "أضف أول شحنة مواد خام واردة.",
-    "confirmDelete": "هل أنت متأكد من حذف هذه المادة الخام؟"
+    "confirmDelete": "هل أنت متأكد من حذف هذه المادة الخام؟",
+    "materialName": "الخامة",
+    "received": "الوارد",
+    "consumed": "المستهلك",
+    "balance": "الرصيد",
+    "avgCostPerTon": "متوسط التكلفة / طن",
+    "addType": "إضافة خامة",
+    "editType": "تعديل الخامة",
+    "viewDetail": "عرض",
+    "tons": "طن",
+    "noTypes": "لا توجد خامات بعد",
+    "addReceipt": "إضافة وارد",
+    "addConsumption": "تسجيل استهلاك",
+    "consumeAll": "استهلاك الرصيد بالكامل",
+    "consumptionDate": "التاريخ",
+    "receipts": "الواردات",
+    "consumptions": "الاستهلاك",
+    "linkedProducts": "اللفات المنتجة",
+    "noReceipts": "لا توجد واردات مسجلة",
+    "noConsumptions": "لا يوجد استهلاك مسجل",
+    "noLinkedProducts": "لا توجد لفات مرتبطة بهذه الخامة",
+    "backToMaterials": "الخامات",
+    "materialNamePlaceholder": "مثال: مستورد - تركيا",
+    "dateProduced": "تاريخ الإنتاج",
+    "dimensions": "الأبعاد",
+    "quantity": "الكمية"
   },
   "products": {
     "title": "المنتجات",
@@ -126,7 +154,9 @@
     "addPayment": "إضافة دفعة",
     "amount": "المبلغ (ج.م)",
     "paymentDate": "تاريخ الدفع",
-    "confirmDelete": "هل أنت متأكد من حذف هذا التسليم؟"
+    "confirmDelete": "هل أنت متأكد من حذف هذا التسليم؟",
+    "deletePayment": "حذف الدفعة",
+    "confirmDeletePayment": "حذف هذه الدفعة؟"
   },
   "invite": {
     "title": "دعوة مستخدم",
@@ -196,7 +226,8 @@
     "preview": "معاينة",
     "moveUp": "تحريك للأعلى",
     "moveDown": "تحريك للأسفل",
-    "manageCards": "إدارة البطاقات"
+    "manageCards": "إدارة البطاقات",
+    "cancel": "إلغاء"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -224,7 +255,14 @@
     "description": "نظم إنتاج الورق والمخزون والتسليمات مع مجموعة الإدارة الأكثر تقدماً في الصناعة.",
     "getStarted": "ابدأ الآن",
     "viewDashboard": "عرض لوحة التحكم",
-    "heroTagline": "الكفاءة، بمفهوم جديد."
+    "heroTagline": "الكفاءة، بمفهوم جديد.",
+    "login": "تسجيل الدخول",
+    "accessPortal": "الدخول إلى لوحة الإدارة",
+    "badgeSecure": "أمان على مستوى المؤسسات",
+    "badgeMultilingual": "دعم متعدد اللغات",
+    "badgeInventory": "إدارة مخزون محسّنة",
+    "productionYield": "كفاءة الإنتاج",
+    "copyright": "© 2026 شركة برايم بيبر. إدارة احترافية للمصانع."
   },
   "common": {
     "loading": "جاري التحميل...",
