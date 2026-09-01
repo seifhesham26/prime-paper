@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +35,9 @@ import type { Company } from "@/server/companies/types";
 
 export function CompaniesClient() {
   const t = useTranslations("companies");
+  const tc = useTranslations("common");
   const { canWrite } = useUserRole();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editItem, setEditItem] = useState<Company | null>(null);
 
@@ -48,27 +52,32 @@ export function CompaniesClient() {
   
   const createMutation = api.companies.create.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       utils.companies.getAll.invalidate();
       setOpen(false);
       setEditItem(null);
     },
+    onError: (err) => toast.error(err.message),
   });
 
   const updateMutation = api.companies.update.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       utils.companies.getAll.invalidate();
       setOpen(false);
       setEditItem(null);
     },
+    onError: (err) => toast.error(err.message),
   });
 
   const deleteMutation = api.companies.delete.useMutation({
     onSuccess: () => {
+      toast.success(tc("deleted"));
       utils.companies.getAll.invalidate();
       utils.analytics.getDashboardStats.invalidate();
     },
     // Surfaces the "still has deliveries" guard.
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -92,10 +101,14 @@ export function CompaniesClient() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm(t("confirmDelete"))) {
-      deleteMutation.mutate({ id });
-    }
+  const handleDelete = async (company: Company) => {
+    const ok = await confirm({
+      title: t("confirmDelete"),
+      description: `${company.name} — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deleteMutation.mutate({ id: company.id });
   };
 
   const handleEdit = (item: Company) => {
@@ -254,7 +267,7 @@ export function CompaniesClient() {
                           variant="ghost"
                           size="icon"
                           className="hover:bg-destructive/10 hover:text-destructive transition-colors h-8 w-8"
-                          onClick={() => handleDelete(c.id)}
+                          onClick={() => handleDelete(c)}
                           disabled={deleteMutation.isPending}
                         >
                           <Trash2 className="h-4 w-4" />

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { SETTINGS_BY_KEY } from "@/server/settings/registry";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Loader2, Check, Settings2 } from "lucide-react";
 
 export function SystemConfigClient() {
   const t = useTranslations("settings");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const isArabic = locale === "ar";
   const { data: settings, isLoading } = api.settings.getAll.useQuery();
@@ -19,11 +21,12 @@ export function SystemConfigClient() {
 
   const updateMutation = api.settings.update.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       utils.settings.getAll.invalidate();
       utils.analytics.getDashboardStats.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const [editedValues, setEditedValues] = useState<Record<string, string>>({});

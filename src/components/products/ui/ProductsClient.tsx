@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,10 +42,12 @@ import type { Product } from "@/server/products/types";
 
 export function ProductsClient() {
   const t = useTranslations("products");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const isArabic = locale === "ar";
   const { canWrite } = useUserRole();
-  
+  const confirm = useConfirm();
+
   const [open, setOpen] = useState(false);
   const [editItem, setEditItem] = useState<Product | null>(null);
   const [selectedMaterialType, setSelectedMaterialType] = useState<string>("");
@@ -60,28 +64,33 @@ export function ProductsClient() {
   
   const createMutation = api.products.create.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       utils.products.getAll.invalidate();
       setOpen(false);
       resetForm();
     },
+    onError: (err) => toast.error(err.message),
   });
 
   const updateMutation = api.products.update.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       utils.products.getAll.invalidate();
       setOpen(false);
       resetForm();
     },
+    onError: (err) => toast.error(err.message),
   });
 
   const deleteMutation = api.products.delete.useMutation({
     onSuccess: () => {
+      toast.success(tc("deleted"));
       utils.products.getAll.invalidate();
       utils.analytics.getDashboardStats.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
     // Surfaces the "appears in a delivery" guard.
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -97,10 +106,14 @@ export function ProductsClient() {
     setOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm(t("confirmDelete"))) {
-      deleteMutation.mutate({ id });
-    }
+  const handleDelete = async (p: Product) => {
+    const ok = await confirm({
+      title: t("confirmDelete"),
+      description: `${p.lengthM}m × ${p.widthCm}cm — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deleteMutation.mutate({ id: p.id });
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -333,7 +346,7 @@ export function ProductsClient() {
                           variant="ghost"
                           size="icon"
                           className="hover:bg-destructive/10 hover:text-destructive transition-colors h-8 w-8"
-                          onClick={() => handleDelete(p.id)}
+                          onClick={() => handleDelete(p)}
                           disabled={deleteMutation.isPending}
                         >
                           <Trash2 className="h-4 w-4" />

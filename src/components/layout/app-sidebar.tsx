@@ -10,7 +10,6 @@ import {
   Building2,
   Truck,
   Settings,
-  LogOut,
   ScrollText,
   UserPlus,
 } from "lucide-react";
@@ -25,7 +24,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { signOut, useSession } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard" as const },
@@ -66,7 +65,9 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => {
-                const isActive = pathname === item.href;
+                // `/raw-materials/abc` must keep the Raw Materials item lit.
+                const isActive =
+                  pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive}>
@@ -101,23 +102,6 @@ export function AppSidebar() {
                 <Settings className="h-4 w-4" />
                 <span>{t("settings")}</span>
               </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() =>
-                signOut({
-                  fetchOptions: {
-                    onSuccess: () => {
-                      window.location.href = "/auth/login";
-                    },
-                  },
-                })
-              }
-              className="text-destructive hover:text-destructive"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>{t("logout")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

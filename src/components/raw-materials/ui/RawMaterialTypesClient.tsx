@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +44,9 @@ type TypeRow = {
 
 export function RawMaterialTypesClient() {
   const t = useTranslations("rawMaterials");
+  const tc = useTranslations("common");
   const { canWrite } = useUserRole();
+  const confirm = useConfirm();
 
   // PaginationControls owns writing ?page= back to the URL; we only read it.
   const searchParams = useSearchParams();
@@ -62,26 +66,31 @@ export function RawMaterialTypesClient() {
 
   const createMutation = api.rawMaterials.create.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       invalidate();
       setOpen(false);
       setEditItem(null);
     },
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const updateMutation = api.rawMaterials.update.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       invalidate();
       setOpen(false);
       setEditItem(null);
     },
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const deleteMutation = api.rawMaterials.delete.useMutation({
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success(tc("deleted"));
+      invalidate();
+    },
     // Surfaces the server-side guard: a material with history cannot go.
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -101,10 +110,14 @@ export function RawMaterialTypesClient() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm(t("confirmDelete"))) {
-      deleteMutation.mutate({ id });
-    }
+  const handleDelete = async (row: TypeRow) => {
+    const ok = await confirm({
+      title: t("confirmDelete"),
+      description: `${row.name} — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deleteMutation.mutate({ id: row.id });
   };
 
   const types = data?.data ?? [];
@@ -273,7 +286,7 @@ export function RawMaterialTypesClient() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-                                onClick={() => handleDelete(row.id)}
+                                onClick={() => handleDelete(row)}
                                 disabled={deleteMutation.isPending}
                               >
                                 <Trash2 className="h-4 w-4" />

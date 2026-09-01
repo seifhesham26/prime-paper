@@ -12,6 +12,9 @@ export const companiesRouter = createTRPCRouter({
       return await getCompaniesService(
         input.page,
         input.forDropdown ? dropdownListLimit : pageSizeDefault,
+        input.search,
+        input.sortBy,
+        input.sortDir,
       );
     }),
 

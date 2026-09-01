@@ -13,7 +13,9 @@
     "logout": "تسجيل الخروج",
     "invite": "دعوة مستخدم",
     "brandName": "برايم بيبر",
-    "brandSub": "إدارة المصنع"
+    "brandSub": "إدارة المصنع",
+    "account": "الحساب",
+    "role": "الصلاحية"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -183,6 +185,10 @@
   "settings": {
     "title": "الإعدادات",
     "language": "اللغة",
+    "theme": "المظهر",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "themeSystem": "تلقائي",
     "arabic": "العربية",
     "english": "English",
     "account": "الحساب",
@@ -278,6 +284,17 @@
     "page": "صفحة",
     "egp": "ج.م",
     "tons": "طن",
-    "kg": "كجم"
+    "kg": "كجم",
+    "saved": "تم الحفظ",
+    "deleted": "تم الحذف",
+    "somethingWentWrong": "حدث خطأ ما",
+    "confirmTitle": "هل أنت متأكد؟",
+    "confirmDeleteDescription": "لا يمكن التراجع عن هذا الإجراء.",
+    "delete": "حذف",
+    "sortAscending": "ترتيب تصاعدي",
+    "sortDescending": "ترتيب تنازلي",
+    "clearSort": "إلغاء الترتيب",
+    "view": "عرض",
+    "edit": "تعديل"
   }
 }

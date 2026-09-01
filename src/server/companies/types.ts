@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { listQueryFields } from "../shared/list-query";
 
 export const CompanySchema = z.object({
   id: z.string().uuid(),
@@ -11,11 +12,10 @@ export const CompanySchema = z.object({
   updatedAt: z.date(),
 });
 
-export const GetCompaniesSchema = z.object({
-  page: z.number().int().min(1).default(1),
-  /** Fetching to fill a picker rather than to page a table. */
-  forDropdown: z.boolean().default(false),
-});
+export const COMPANY_SORT_KEYS = ["name", "contactPerson", "createdAt"] as const;
+export type CompanySortKey = (typeof COMPANY_SORT_KEYS)[number];
+
+export const GetCompaniesSchema = z.object(listQueryFields(COMPANY_SORT_KEYS));
 
 export const CreateCompanySchema = z.object({
   name: z.string().min(1, "Name is required"),

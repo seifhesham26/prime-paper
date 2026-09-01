@@ -13,7 +13,9 @@
     "logout": "Logout",
     "invite": "Invite User",
     "brandName": "Prime Paper",
-    "brandSub": "Factory Manager"
+    "brandSub": "Factory Manager",
+    "account": "Account",
+    "role": "Role"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -183,6 +185,10 @@
   "settings": {
     "title": "Settings",
     "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
     "arabic": "العربية",
     "english": "English",
     "account": "Account",
@@ -278,6 +284,17 @@
     "page": "Page",
     "egp": "EGP",
     "tons": "Tons",
-    "kg": "kg"
+    "kg": "kg",
+    "saved": "Saved",
+    "deleted": "Deleted",
+    "somethingWentWrong": "Something went wrong",
+    "confirmTitle": "Are you sure?",
+    "confirmDeleteDescription": "This cannot be undone.",
+    "delete": "Delete",
+    "sortAscending": "Sort ascending",
+    "sortDescending": "Sort descending",
+    "clearSort": "Clear sort",
+    "view": "View",
+    "edit": "Edit"
   }
 }

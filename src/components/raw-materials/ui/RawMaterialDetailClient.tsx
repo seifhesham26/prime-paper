@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,9 +41,11 @@ import {
 
 export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
   const t = useTranslations("rawMaterials");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const isArabic = locale === "ar";
   const { canWrite } = useUserRole();
+  const confirm = useConfirm();
 
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [consumptionOpen, setConsumptionOpen] = useState(false);
@@ -60,6 +64,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
 
   const addReceipt = api.rawMaterials.createReceipt.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       invalidate();
       setReceiptOpen(false);
       setFormError("");
@@ -68,13 +73,17 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
   });
 
   const deleteReceipt = api.rawMaterials.deleteReceipt.useMutation({
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success(tc("deleted"));
+      invalidate();
+    },
     // Carries the "would leave a negative balance" guard to the user.
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const addConsumption = api.rawMaterials.createConsumption.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       invalidate();
       setConsumptionOpen(false);
       setConsumeWeight("");
@@ -84,8 +93,11 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
   });
 
   const deleteConsumption = api.rawMaterials.deleteConsumption.useMutation({
-    onSuccess: invalidate,
-    onError: (err) => alert(err.message),
+    onSuccess: () => {
+      toast.success(tc("deleted"));
+      invalidate();
+    },
+    onError: (err) => toast.error(err.message),
   });
 
   const fmtDate = (d: Date | string) =>
@@ -137,6 +149,26 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
       weightTons: consumeWeight,
       notes: (f.get("notes") as string) || undefined,
     });
+  };
+
+  const handleDeleteReceipt = async (r: (typeof data.receipts)[number]) => {
+    const ok = await confirm({
+      title: t("confirmDelete"),
+      description: `${fmtDate(r.dateReceived)} — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deleteReceipt.mutate({ id: r.id });
+  };
+
+  const handleDeleteConsumption = async (c: (typeof data.consumptions)[number]) => {
+    const ok = await confirm({
+      title: t("confirmDelete"),
+      description: `${fmtDate(c.date)} — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deleteConsumption.mutate({ id: c.id });
   };
 
   const balance = Number(data.balanceTons);
@@ -297,11 +329,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                              onClick={() => {
-                                if (confirm(t("confirmDelete"))) {
-                                  deleteReceipt.mutate({ id: r.id });
-                                }
-                              }}
+                              onClick={() => handleDeleteReceipt(r)}
                               disabled={deleteReceipt.isPending}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -445,11 +473,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                              onClick={() => {
-                                if (confirm(t("confirmDelete"))) {
-                                  deleteConsumption.mutate({ id: c.id });
-                                }
-                              }}
+                              onClick={() => handleDeleteConsumption(c)}
                               disabled={deleteConsumption.isPending}
                             >
                               <Trash2 className="h-4 w-4" />

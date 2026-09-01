@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,9 +58,11 @@ function PaymentBadge({ status }: { status: "paid" | "partial" | "unpaid" | null
 
 export function DeliveriesClient() {
   const t = useTranslations("deliveries");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const isArabic = locale === "ar";
   const { canWrite } = useUserRole();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
 
   const utils = api.useUtils();
@@ -76,22 +80,24 @@ export function DeliveriesClient() {
   
   const createMutation = api.deliveries.create.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       utils.deliveries.getAll.invalidate();
       utils.analytics.getDashboardStats.invalidate();
       utils.analytics.evaluateCards.invalidate();
       setOpen(false);
       resetForm();
     },
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const deleteMutation = api.deliveries.delete.useMutation({
     onSuccess: () => {
+      toast.success(tc("deleted"));
       utils.deliveries.getAll.invalidate();
       utils.analytics.getDashboardStats.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const [selectedCompany, setSelectedCompany] = useState("");
@@ -134,10 +140,14 @@ export function DeliveriesClient() {
     });
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm(t("confirmDelete"))) {
-      deleteMutation.mutate({ id });
-    }
+  const handleDelete = async (d: (typeof deliveries)[number]) => {
+    const ok = await confirm({
+      title: t("confirmDelete"),
+      description: `${d.companyName} — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deleteMutation.mutate({ id: d.id });
   };
 
   const isSubmitting = createMutation.isPending;
@@ -351,7 +361,7 @@ export function DeliveriesClient() {
                           variant="ghost"
                           size="icon"
                           className="hover:bg-destructive/10 hover:text-destructive transition-colors h-8 w-8"
-                          onClick={() => handleDelete(d.id)}
+                          onClick={() => handleDelete(d)}
                           disabled={deleteMutation.isPending}
                         >
                           <Trash2 className="h-4 w-4" />

@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,9 +48,11 @@ function PaymentBadge({ status }: { status: string | null }) {
 
 export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
   const t = useTranslations("deliveries");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const isArabic = locale === "ar";
   const { canWrite } = useUserRole();
+  const confirm = useConfirm();
   const [paymentOpen, setPaymentOpen] = useState(false);
 
   const utils = api.useUtils();
@@ -63,16 +67,20 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
 
   const addPaymentMutation = api.deliveries.addPayment.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       invalidate();
       setPaymentOpen(false);
     },
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   // Deleting a payment recomputes the delivery's status server-side.
   const deletePaymentMutation = api.deliveries.deletePayment.useMutation({
-    onSuccess: invalidate,
-    onError: (err) => alert(err.message),
+    onSuccess: () => {
+      toast.success(tc("deleted"));
+      invalidate();
+    },
+    onError: (err) => toast.error(err.message),
   });
 
   if (isLoading) {
@@ -105,6 +113,16 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
       date: new Date(formData.get("paymentDate") as string),
       notes: formData.get("notes") as string || undefined,
     });
+  };
+
+  const handleDeletePayment = async (p: (typeof delivery.payments)[number]) => {
+    const ok = await confirm({
+      title: t("confirmDeletePayment"),
+      description: `${Number(p.amountEgp).toLocaleString()} EGP — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deletePaymentMutation.mutate({ id: p.id });
   };
 
   return (
@@ -316,11 +334,7 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
                             size="icon"
                             className="h-8 w-8 text-destructive hover:bg-destructive/10"
                             title={t("deletePayment")}
-                            onClick={() => {
-                              if (confirm(t("confirmDeletePayment"))) {
-                                deletePaymentMutation.mutate({ id: p.id });
-                              }
-                            }}
+                            onClick={() => handleDeletePayment(p)}
                             disabled={deletePaymentMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />

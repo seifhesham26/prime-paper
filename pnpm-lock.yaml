@@ -59,6 +59,9 @@ importers:
       next-intl:
         specifier: ^4.8.3
         version: 4.8.3(@swc/helpers@0.5.19)(next@16.1.6(@babel/core@7.29.0(supports-color@7.2.0))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       radix-ui:
         specifier: ^1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -77,6 +80,9 @@ importers:
       recharts:
         specifier: ^3.8.0
         version: 3.8.0(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react-is@16.13.1)(react@19.2.3)(redux@5.0.1)
+      sonner:
+        specifier: ^2.0.8
+        version: 2.0.8(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       superjson:
         specifier: ^2.2.6
         version: 2.2.6
@@ -4603,6 +4609,12 @@ packages:
       typescript:
         optional: true
 
+  next-themes@0.4.6:
+    resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
+    peerDependencies:
+      react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+
   next@16.1.6:
     resolution: {integrity: sha512-hkyRkcu5x/41KoqnROkfTm2pZVbKxvbZRuNvKXLRXxs3VfyO0WhY50TQS40EuKO9SW3rBj/sF3WbVwDACeMZyw==}
     engines: {node: '>=20.9.0'}
@@ -5192,6 +5204,16 @@ packages:
 
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
+
+  sonner@2.0.8:
+    resolution: {integrity: sha512-UM/ByIoFra8yzV75n1o0Puu0bw5U/9UNnDacrJNspekBewIfsQ3D6ez1nvlWpt7aTsO6rujQtifBpycwIivqlg==}
+    peerDependencies:
+      '@types/react': ^18.0.0 || ^19.0.0
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -8003,7 +8025,7 @@ snapshots:
       debug: 4.4.3(supports-color@7.2.0)
       minimatch: 10.2.4
       semver: 7.7.4
-      tinyglobby: 0.2.15
+      tinyglobby: 0.2.17
       ts-api-utils: 2.4.0(typescript@5.9.3)
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -9983,6 +10005,11 @@ snapshots:
     transitivePeerDependencies:
       - '@swc/helpers'
 
+  next-themes@0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+    dependencies:
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+
   next@16.1.6(@babel/core@7.29.0(supports-color@7.2.0))(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       '@next/env': 16.1.6
@@ -10760,6 +10787,13 @@ snapshots:
       is-arrayish: 0.3.4
 
   sisteransi@1.0.5: {}
+
+  sonner@2.0.8(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+    dependencies:
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+    optionalDependencies:
+      '@types/react': 19.2.14
 
   source-map-js@1.2.1: {}
 
