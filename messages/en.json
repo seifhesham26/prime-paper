@@ -145,7 +145,10 @@
     "resetFailed": "Failed to reset password",
     "noPendingResets": "No pending password resets.",
     "newPassword": "New Password",
-    "resolve": "Resolve"
+    "resolve": "Resolve",
+    "roleAdmin": "Admin — full access",
+    "roleViewer": "Viewer — read only",
+    "noAccountForEmail": "No account exists with that email address"
   },
   "settings": {
     "title": "Settings",

@@ -145,7 +145,10 @@
     "resetFailed": "فشل في إعادة تعيين كلمة المرور",
     "noPendingResets": "لا توجد طلبات إعادة تعيين معلقة.",
     "newPassword": "كلمة المرور الجديدة",
-    "resolve": "حل"
+    "resolve": "حل",
+    "roleAdmin": "مدير — صلاحية كاملة",
+    "roleViewer": "مشاهد — قراءة فقط",
+    "noAccountForEmail": "لا يوجد حساب بهذا البريد الإلكتروني"
   },
   "settings": {
     "title": "الإعدادات",

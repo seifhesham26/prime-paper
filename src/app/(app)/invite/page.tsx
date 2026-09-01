@@ -7,8 +7,9 @@ import { InviteClient } from "./client";
 export default async function InvitePage() {
   const session = await getSession();
 
-  if (!session || (session.user.role !== "dev" && session.user.role !== "admin")) {
-    redirect("/");
+  // Account administration is dev only — admins manage data, not accounts.
+  if (!session || session.user.role !== "dev") {
+    redirect("/dashboard");
   }
 
   const t = await getTranslations("invite");
