@@ -9,8 +9,14 @@ import {
 import type { z } from "zod";
 import type { CreateProductSchema, UpdateProductSchema } from "./types";
 
-export async function getProductsService(page: number, limit: number) {
-  return await findProducts(page, limit);
+export async function getProductsService(
+  page: number,
+  limit: number,
+  search?: string,
+  sortBy?: string,
+  sortDir: "asc" | "desc" = "desc",
+) {
+  return await findProducts(page, limit, search, sortBy, sortDir);
 }
 
 export async function createProductService(

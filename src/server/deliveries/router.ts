@@ -25,7 +25,13 @@ import {
 export const deliveriesRouter = createTRPCRouter({
   getAll: protectedProcedure.input(GetDeliveriesSchema).query(async ({ input }) => {
     const { pageSizeDefault } = await getSettingsMap();
-    return getDeliveriesService(input.page, pageSizeDefault);
+    return getDeliveriesService(
+      input.page,
+      pageSizeDefault,
+      input.search,
+      input.sortBy,
+      input.sortDir,
+    );
   }),
 
   getById: protectedProcedure.input(GetDeliveryByIdSchema).query(async ({ input }) => {

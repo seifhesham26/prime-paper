@@ -84,10 +84,13 @@
     "noConsumptions": "لا يوجد استهلاك مسجل",
     "noLinkedProducts": "لا توجد لفات مرتبطة بهذه الخامة",
     "backToMaterials": "الخامات",
+    "materialDetail": "تفاصيل الخامة",
+    "notFound": "لم يتم العثور على الخامة",
     "materialNamePlaceholder": "مثال: مستورد - تركيا",
     "dateProduced": "تاريخ الإنتاج",
     "dimensions": "الأبعاد",
-    "quantity": "الكمية"
+    "quantity": "الكمية",
+    "searchPlaceholder": "ابحث في المواد…"
   },
   "products": {
     "title": "المنتجات",
@@ -107,7 +110,8 @@
     "noData": "لا توجد منتجات بعد",
     "emptyStateDesc": "أضف أول منتج إلى المخزون.",
     "selectRawMaterial": "اختر المادة الخام",
-    "confirmDelete": "هل أنت متأكد من حذف هذا المنتج؟"
+    "confirmDelete": "هل أنت متأكد من حذف هذا المنتج؟",
+    "searchPlaceholder": "ابحث بالمادة أو الملاحظات…"
   },
   "companies": {
     "title": "الشركات",
@@ -124,7 +128,8 @@
     "cancel": "إلغاء",
     "noData": "لا توجد شركات بعد",
     "emptyStateDesc": "أضف أول شركة للبدء.",
-    "confirmDelete": "هل أنت متأكد من حذف هذه الشركة؟"
+    "confirmDelete": "هل أنت متأكد من حذف هذه الشركة؟",
+    "searchPlaceholder": "ابحث بالاسم أو جهة الاتصال…"
   },
   "deliveries": {
     "title": "التسليمات",
@@ -148,10 +153,12 @@
     "cancel": "إلغاء",
     "noData": "لا توجد تسليمات بعد",
     "emptyStateDesc": "أنشئ أول تسليم للبدء.",
+    "searchPlaceholder": "ابحث بالشركة أو الملاحظات…",
     "emptyItems": "لا توجد منتجات مضافة لهذا التسليم بعد.",
     "emptyPayments": "لا توجد مدفوعات مسجلة.",
     "deliveryNotFound": "لم يتم العثور على التسليم",
     "backToDeliveries": "العودة للتسليمات",
+    "deliveryDetail": "تفاصيل التسليم",
     "payments": "المدفوعات",
     "addPayment": "إضافة دفعة",
     "amount": "المبلغ (ج.م)",
@@ -296,5 +303,13 @@
     "clearSort": "إلغاء الترتيب",
     "view": "عرض",
     "edit": "تعديل"
+  },
+  "errors": {
+    "title": "حدث خطأ ما",
+    "description": "حدث خطأ غير متوقع. برجاء المحاولة مرة أخرى.",
+    "retry": "إعادة المحاولة",
+    "notFoundTitle": "الصفحة غير موجودة",
+    "notFoundDescription": "الصفحة التي تبحث عنها غير موجودة.",
+    "goToDashboard": "الذهاب إلى لوحة التحكم"
   }
 }

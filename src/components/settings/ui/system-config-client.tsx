@@ -93,7 +93,7 @@ export function SystemConfigClient() {
       {Object.entries(grouped).map(([category, items]) => (
         <Card
           key={category}
-          className="border-0 shadow-md bg-card/50 overflow-hidden"
+          className="shadow-md overflow-hidden"
         >
           <CardHeader className="bg-muted/30 border-b border-muted py-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">

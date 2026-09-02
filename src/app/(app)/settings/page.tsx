@@ -79,7 +79,7 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="global" className="mt-0 space-y-6">
-            <Card className="border-0 shadow-md bg-card/50">
+            <Card className="shadow-md">
               <CardHeader className="bg-muted/30 border-b border-muted">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Languages className="h-5 w-5 text-muted-foreground" />

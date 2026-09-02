@@ -70,7 +70,7 @@ export function InviteClient() {
         </TabsList>
 
         <TabsContent value="create" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-          <Card className="border-0 shadow-xl bg-background/60 backdrop-blur-sm">
+          <Card className="shadow-xl">
             <CardHeader className="bg-muted/30 border-b border-muted">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <UserPlus className="h-5 w-5 text-muted-foreground" />

@@ -1,14 +1,48 @@
 import { db } from "@/db";
 import { products, rawMaterialTypes, deliveryItems } from "@/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, asc, or, ilike, sql } from "drizzle-orm";
 import type { z } from "zod";
 import type { CreateProductSchema, UpdateProductSchema } from "./types";
+import { likePattern, pickSortKey } from "../shared/list-query";
+import { PRODUCT_SORT_KEYS } from "./types";
 
-export async function findProducts(page = 1, limit = 10) {
+export async function findProducts(
+  page = 1,
+  limit = 10,
+  search?: string,
+  sortBy?: string,
+  sortDir: "asc" | "desc" = "desc",
+) {
   const offset = (page - 1) * limit;
 
-  const [totalResult] = await db.select({ count: sql`count(*)` }).from(products);
+  const term = search?.trim();
+  const where = term
+    ? or(
+        ilike(products.notes, likePattern(term)),
+        ilike(rawMaterialTypes.name, likePattern(term)),
+      )
+    : undefined;
+
+  // The count carries the same join as the page, because the predicate
+  // reaches across it to the material name.
+  const [totalResult] = await db
+    .select({ count: sql`count(*)` })
+    .from(products)
+    .leftJoin(rawMaterialTypes, eq(products.rawMaterialTypeId, rawMaterialTypes.id))
+    .where(where);
   const total = Number(totalResult?.count || 0);
+
+  const SORT_COLUMNS = {
+    dateProduced: products.dateProduced,
+    lengthM: products.lengthM,
+    widthCm: products.widthCm,
+    weightKg: products.weightKg,
+    quantity: products.quantity,
+  } as const;
+
+  const key = pickSortKey(sortBy, PRODUCT_SORT_KEYS);
+  const direction = sortDir === "asc" ? asc : desc;
+  const orderBy = key ? direction(SORT_COLUMNS[key]) : desc(products.dateProduced);
 
   const data = await db
     .select({
@@ -25,7 +59,8 @@ export async function findProducts(page = 1, limit = 10) {
     })
     .from(products)
     .leftJoin(rawMaterialTypes, eq(products.rawMaterialTypeId, rawMaterialTypes.id))
-    .orderBy(desc(products.dateProduced))
+    .where(where)
+    .orderBy(orderBy)
     .limit(limit)
     .offset(offset);
 

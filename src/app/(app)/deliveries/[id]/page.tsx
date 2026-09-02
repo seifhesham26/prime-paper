@@ -12,7 +12,10 @@ export default async function DeliveryDetailPage({
 
   return (
     <>
-      <Header title={t("title")} />
+      <Header
+        title={t("deliveryDetail")}
+        breadcrumb={{ href: "/deliveries", label: t("title") }}
+      />
       <div className="p-6">
         <DeliveryDetailClient deliveryId={id} />
       </div>

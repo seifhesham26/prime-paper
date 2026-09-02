@@ -30,6 +30,9 @@ export const rawMaterialsRouter = createTRPCRouter({
     return getTypesService(
       input.page,
       input.forDropdown ? dropdownListLimit : pageSizeDefault,
+      input.search,
+      input.sortBy,
+      input.sortDir,
     );
   }),
 

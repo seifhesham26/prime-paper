@@ -53,8 +53,8 @@ export default async function LandingPage() {
       <main className="grow pt-32 pb-20 relative overflow-hidden">
         {/* Abstract Background Shapes */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -z-10 w-full h-full pointer-events-none opacity-20 dark:opacity-30">
-           <div className="absolute top-[10%] left-[10%] w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse" />
-           <div className="absolute bottom-[20%] right-[10%] w-80 h-80 bg-accent rounded-full blur-[100px] animate-pulse delay-700" />
+           <div className="absolute top-[10%] left-[10%] w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse motion-reduce:animate-none" />
+           <div className="absolute bottom-[20%] right-[10%] w-80 h-80 bg-accent rounded-full blur-[100px] animate-pulse delay-700 motion-reduce:animate-none" />
         </div>
 
         <div className="container mx-auto px-6 text-center lg:text-left flex flex-col lg:flex-row items-center justify-between gap-16">
@@ -96,9 +96,9 @@ export default async function LandingPage() {
           <div className="relative w-full max-w-lg lg:max-w-xl animate-in fade-in zoom-in duration-1000 delay-300">
              <div className="aspect-square relative rounded-[3rem] overflow-hidden border border-border bg-card/30 backdrop-blur-3xl shadow-2xl p-8 flex flex-col justify-center gap-8">
                 <div className="space-y-2">
-                   <div className="h-3 w-1/3 bg-primary/30 rounded-full animate-pulse" />
-                   <div className="h-3 w-3/4 bg-primary/20 rounded-full animate-pulse delay-100" />
-                   <div className="h-3 w-1/2 bg-primary/20 rounded-full animate-pulse delay-200" />
+                   <div className="h-3 w-1/3 bg-primary/30 rounded-full animate-pulse motion-reduce:animate-none" />
+                   <div className="h-3 w-3/4 bg-primary/20 rounded-full animate-pulse delay-100 motion-reduce:animate-none" />
+                   <div className="h-3 w-1/2 bg-primary/20 rounded-full animate-pulse delay-200 motion-reduce:animate-none" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div className="h-32 bg-muted/40 rounded-3xl border border-border animate-in slide-in-from-bottom-5 duration-700" />
@@ -117,7 +117,7 @@ export default async function LandingPage() {
              </div>
              
              {/* Floating UI elements */}
-             <div className="absolute -top-6 -right-6 h-20 w-56 bg-emerald-500/10 backdrop-blur-md rounded-2xl border border-emerald-500/20 p-4 flex items-center gap-4 shadow-xl animate-bounce duration-3000">
+             <div className="absolute -top-6 -right-6 h-20 w-56 bg-emerald-500/10 backdrop-blur-md rounded-2xl border border-emerald-500/20 p-4 flex items-center gap-4 shadow-xl animate-bounce duration-3000 motion-reduce:animate-none">
                 <div className="h-10 w-10 bg-emerald-500 rounded-full flex items-center justify-center font-bold text-white shadow-lg">✓</div>
                 <div>
                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{t("productionYield")}</p>

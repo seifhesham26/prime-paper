@@ -8,7 +8,7 @@ import { useUserRole } from "@/hooks/use-role";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Money } from "@/components/ui/money";
 import {
   Table,
   TableBody,
@@ -28,6 +28,8 @@ import {
   Legend,
 } from "recharts";
 import { StatCard } from "./StatCard";
+import { PaymentBadge } from "@/components/deliveries/ui/payment-badge";
+import { localeTag } from "@/lib/format";
 
 // Static map, not `lg:grid-cols-${n}` — Tailwind scans source text, so an
 // interpolated class name is never generated and the grid silently breaks.
@@ -107,7 +109,7 @@ export function AnalyticsClient() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Unpaid Balances */}
         <div className="col-span-full lg:col-span-2 space-y-4">
-          <Card className="border-0 shadow-md h-full flex flex-col hover:shadow-lg transition-shadow duration-300 dark:bg-card/50">
+          <Card className="shadow-md h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle className="text-lg">{t("topUnpaidCompanies")}</CardTitle>
             </CardHeader>
@@ -121,8 +123,8 @@ export function AnalyticsClient() {
                       <span className="font-medium text-sm group-hover:text-primary transition-colors">
                         {company.name}
                       </span>
-                      <span className="font-bold text-destructive" dir="ltr">
-                        {company.balance.toLocaleString()} {t("egp")}
+                      <span className="font-bold text-status-unpaid">
+                        <Money value={company.balance} />
                       </span>
                     </div>
                   ))}
@@ -130,7 +132,7 @@ export function AnalyticsClient() {
               )}
               <Button asChild variant="outline" className="w-full text-xs mt-2 hover:bg-muted/50 transition-colors">
                 <Link href="/companies">
-                  {t("viewAll")} <ExternalLink className="h-3 w-3 ml-1 rtl:mr-1" />
+                  {t("viewAll")} <ExternalLink className="h-3 w-3 ms-1" />
                 </Link>
               </Button>
             </CardContent>
@@ -139,11 +141,11 @@ export function AnalyticsClient() {
 
         {/* Chart & Recent Deliveries */}
         <div className="col-span-full lg:col-span-5 space-y-4">
-          <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-card/50">
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle className="text-lg">{t("revenueAndPayments")}</CardTitle>
             </CardHeader>
-            <CardContent className="pr-2 rtl:pl-2 rtl:pr-0">
+            <CardContent className="pe-2">
               <div className="h-[300px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.monthlyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -152,7 +154,7 @@ export function AnalyticsClient() {
                       dataKey="month" 
                       tickFormatter={(value) => {
                         const date = new Date(value + "-01");
-                        return date.toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'short' });
+                        return date.toLocaleDateString(localeTag(locale), { month: 'short' });
                       }}
                       axisLine={false}
                       tickLine={false}
@@ -172,7 +174,7 @@ export function AnalyticsClient() {
                       formatter={(value: unknown) => [Number(value).toLocaleString() + " " + t("egp"), ""]}
                       labelFormatter={(label: unknown) => {
                         const date = new Date(String(label) + "-01");
-                        return date.toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' });
+                        return date.toLocaleDateString(localeTag(locale), { month: 'long', year: 'numeric' });
                       }}
                       cursor={{fill: 'var(--color-accent, #f3f4f6)', opacity: 0.2}}
                       contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
@@ -186,7 +188,7 @@ export function AnalyticsClient() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-card/50">
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle className="text-lg">{t("recentDeliveries")}</CardTitle>
             </CardHeader>
@@ -194,8 +196,8 @@ export function AnalyticsClient() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className={isArabic ? "text-right" : "text-left"}>{t("company")}</TableHead>
-                    <TableHead className={isArabic ? "text-right" : "text-left"}>{t("date")}</TableHead>
+                    <TableHead className="text-start">{t("company")}</TableHead>
+                    <TableHead className="text-start">{t("date")}</TableHead>
                     <TableHead className="text-center">{t("amount")}</TableHead>
                     <TableHead className="text-center">{t("status")}</TableHead>
                   </TableRow>
@@ -204,21 +206,14 @@ export function AnalyticsClient() {
                   {stats.recentDeliveries.map((delivery) => (
                     <TableRow key={delivery.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-medium whitespace-nowrap">{delivery.companyName}</TableCell>
-                      <TableCell dir="ltr" className={isArabic ? "text-right whitespace-nowrap" : "text-left whitespace-nowrap"}>
-                        {new Date(delivery.date).toLocaleDateString(isArabic ? "ar-EG" : "en-US")}
-                      </TableCell>
-                      <TableCell className="text-center whitespace-nowrap" dir="ltr">
-                        {delivery.sellingPriceEgp.toLocaleString()}
+                      <TableCell dir="ltr" className="text-start whitespace-nowrap">
+                        {new Date(delivery.date).toLocaleDateString(localeTag(locale))}
                       </TableCell>
                       <TableCell className="text-center whitespace-nowrap">
-                        <Badge 
-                          variant={
-                            delivery.paymentStatus === "paid" ? "default" :
-                            delivery.paymentStatus === "partial" ? "secondary" : "destructive"
-                          }
-                        >
-                          {t(delivery.paymentStatus)}
-                        </Badge>
+                        <Money value={delivery.sellingPriceEgp} showUnit={false} />
+                      </TableCell>
+                      <TableCell className="text-center whitespace-nowrap">
+                        <PaymentBadge status={delivery.paymentStatus} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -227,7 +222,7 @@ export function AnalyticsClient() {
               <div className="p-4 pt-2 flex justify-end">
                  <Button asChild variant="link" className="text-sm p-0 h-auto">
                   <Link href="/deliveries">
-                    {t("viewAll")} <ExternalLink className="h-3 w-3 ml-1 rtl:mr-1" />
+                    {t("viewAll")} <ExternalLink className="h-3 w-3 ms-1" />
                   </Link>
                  </Button>
               </div>

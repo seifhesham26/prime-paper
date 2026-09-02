@@ -16,8 +16,14 @@ import type {
   UpdatePaymentSchema,
 } from "./types";
 
-export async function getDeliveriesService(page: number, limit: number) {
-  return await findDeliveries(page, limit);
+export async function getDeliveriesService(
+  page: number,
+  limit: number,
+  search?: string,
+  sortBy?: string,
+  sortDir: "asc" | "desc" = "desc",
+) {
+  return await findDeliveries(page, limit, search, sortBy, sortDir);
 }
 
 export async function getDeliveryByIdService(id: string) {

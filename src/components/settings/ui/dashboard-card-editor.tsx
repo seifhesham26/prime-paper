@@ -290,7 +290,7 @@ export function DashboardCardEditor() {
           {cards.map((card, index) => (
             <Card
               key={card.id}
-              className={`border-0 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md ${
+              className={`shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md ${
                 !card.visible ? "opacity-60" : ""
               }`}
             >

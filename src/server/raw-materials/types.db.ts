@@ -5,8 +5,10 @@ import {
   rawMaterialConsumptions,
   products,
 } from "@/db/schema";
-import { eq, desc, asc, sql } from "drizzle-orm";
+import { eq, desc, asc, or, ilike, sql } from "drizzle-orm";
 import { weightedAvgCostPerTon } from "./balance";
+import { likePattern, pickSortKey } from "../shared/list-query";
+import { RAW_MATERIAL_SORT_KEYS } from "./types";
 
 // Scalar subqueries, deliberately. Joining both child tables under one
 // GROUP BY produces a Cartesian fan-out that inflates both sums.
@@ -41,13 +43,44 @@ function withDerived<
   };
 }
 
-export async function findTypes(page = 1, limit = 50) {
+export async function findTypes(
+  page = 1,
+  limit = 50,
+  search?: string,
+  sortBy?: string,
+  sortDir: "asc" | "desc" = "desc",
+) {
   const offset = (page - 1) * limit;
+
+  const term = search?.trim();
+  const where = term
+    ? or(
+        ilike(rawMaterialTypes.name, likePattern(term)),
+        ilike(rawMaterialTypes.notes, likePattern(term)),
+      )
+    : undefined;
 
   const [totalResult] = await db
     .select({ count: sql<string>`count(*)` })
-    .from(rawMaterialTypes);
+    .from(rawMaterialTypes)
+    .where(where);
   const total = Number(totalResult?.count || 0);
+
+  // Balance has no column — it is received minus consumed — so sorting on it
+  // means ordering by the same expression the select computes.
+  const balanceSql = sql`(${receivedSql}) - (${consumedSql})`;
+  const SORT_EXPRESSIONS = {
+    name: rawMaterialTypes.name,
+    receivedTons: receivedSql,
+    consumedTons: consumedSql,
+    balanceTons: balanceSql,
+  } as const;
+
+  const key = pickSortKey(sortBy, RAW_MATERIAL_SORT_KEYS);
+  const direction = sortDir === "asc" ? asc : desc;
+  const orderBy = key
+    ? direction(SORT_EXPRESSIONS[key])
+    : asc(rawMaterialTypes.name);
 
   const rows = await db
     .select({
@@ -60,7 +93,8 @@ export async function findTypes(page = 1, limit = 50) {
       totalCostEgp: totalCostSql,
     })
     .from(rawMaterialTypes)
-    .orderBy(asc(rawMaterialTypes.name))
+    .where(where)
+    .orderBy(orderBy)
     .limit(limit)
     .offset(offset);
 

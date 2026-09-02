@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { moneySchema, weightTonsSchema } from "@/server/shared/validation";
+import { listQueryFields } from "../shared/list-query";
 
 // ─── Types (Parent Material) ─────────────────────────────
 export const CreateTypeSchema = z.object({
@@ -11,11 +12,15 @@ export const UpdateTypeSchema = CreateTypeSchema.extend({
   id: z.string().uuid(),
 });
 
-export const GetTypesSchema = z.object({
-  page: z.number().int().min(1).default(1),
-  /** Fetching to fill a picker rather than to page a table. */
-  forDropdown: z.boolean().default(false),
-});
+export const RAW_MATERIAL_SORT_KEYS = [
+  "name",
+  "receivedTons",
+  "consumedTons",
+  "balanceTons",
+] as const;
+export type RawMaterialSortKey = (typeof RAW_MATERIAL_SORT_KEYS)[number];
+
+export const GetTypesSchema = z.object(listQueryFields(RAW_MATERIAL_SORT_KEYS));
 
 export const IdSchema = z.object({ id: z.string().uuid() });
 
