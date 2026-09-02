@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { ScrollText, Loader2, LogIn } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+
 export default function LoginPage() {
   const t = useTranslations("auth");
   const [email, setEmail] = useState("");

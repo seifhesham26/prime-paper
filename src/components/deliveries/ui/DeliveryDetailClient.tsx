@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { localeTag } from "@/lib/format";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,6 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
   const t = useTranslations("deliveries");
   const tc = useTranslations("common");
   const locale = useLocale();
-  const isArabic = locale === "ar";
   const { canWrite } = useUserRole();
   const confirm = useConfirm();
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -319,7 +319,7 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
                   {delivery.payments.map((p) => (
                     <TableRow key={p.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell dir="ltr" className="text-start text-muted-foreground whitespace-nowrap">
-                        {new Date(p.date).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {new Date(p.date).toLocaleDateString(localeTag(locale), { year: 'numeric', month: 'short', day: 'numeric' })}
                       </TableCell>
                       <TableCell className="text-center font-medium text-status-paid">
                         <Money value={p.amountEgp} />

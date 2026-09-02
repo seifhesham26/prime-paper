@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { localeTag } from "@/lib/format";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,6 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
   const t = useTranslations("rawMaterials");
   const tc = useTranslations("common");
   const locale = useLocale();
-  const isArabic = locale === "ar";
   const { canWrite } = useUserRole();
   const confirm = useConfirm();
 
@@ -103,7 +103,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
   });
 
   const fmtDate = (d: Date | string) =>
-    new Date(d).toLocaleDateString(isArabic ? "ar-EG" : "en-US", {
+    new Date(d).toLocaleDateString(localeTag(locale), {
       year: "numeric",
       month: "short",
       day: "numeric",

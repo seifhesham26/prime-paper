@@ -14,6 +14,20 @@ describe("escapeLike", () => {
     expect(escapeLike("a\\b")).toBe("a\\\\b");
   });
 
+  it("escapes a backslash and a wildcard in the same term", () => {
+    // Input is a real backslash followed by a wildcard: a \ % b (4 chars).
+    // Written in source as "a\\%b" — "a\%b" would silently parse to "a%b"
+    // with no backslash at all, since `\%` is not a recognized JS escape,
+    // and would not actually discriminate replacement order.
+    //
+    // Backslash-first (correct): \ -> \\, then % -> \%, giving a + three
+    // backslashes + % + b (6 chars): a\\\%b.
+    // Percent-first (wrong): % -> \%, then the backslash pass doubles both
+    // the original backslash and the one just introduced before %, giving
+    // four backslashes instead of three: a\\\\%b (7 chars).
+    expect(escapeLike("a\\%b")).toBe("a\\\\\\%b");
+  });
+
   it("leaves ordinary text untouched, Arabic included", () => {
     expect(escapeLike("ورق")).toBe("ورق");
   });
