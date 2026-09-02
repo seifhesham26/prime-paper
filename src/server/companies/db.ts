@@ -1,26 +1,60 @@
 import { db } from "@/db";
 import { companies, deliveries } from "@/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, asc, or, ilike, sql } from "drizzle-orm";
 import type { z } from "zod";
+import { likePattern, pickSortKey } from "../shared/list-query";
+import { COMPANY_SORT_KEYS } from "./types";
 import type { CreateCompanySchema, UpdateCompanySchema } from "./types";
 
-export async function findCompanies(page = 1, limit = 10) {
+export async function findCompanies(
+  page = 1,
+  limit = 10,
+  search?: string,
+  sortBy?: string,
+  sortDir: "asc" | "desc" = "desc",
+) {
   const offset = (page - 1) * limit;
 
-  const [totalResult] = await db.select({ count: sql`count(*)` }).from(companies);
+  // The count and the page must share one predicate, or totalPages
+  // describes a different result set than the rows returned.
+  const term = search?.trim();
+  const where = term
+    ? or(
+        ilike(companies.name, likePattern(term)),
+        ilike(companies.contactPerson, likePattern(term)),
+        ilike(companies.phone, likePattern(term)),
+        ilike(companies.address, likePattern(term)),
+      )
+    : undefined;
+
+  const [totalResult] = await db
+    .select({ count: sql`count(*)` })
+    .from(companies)
+    .where(where);
   const total = Number(totalResult?.count || 0);
+
+  const SORT_COLUMNS = {
+    name: companies.name,
+    contactPerson: companies.contactPerson,
+    createdAt: companies.createdAt,
+  } as const;
+
+  const key = pickSortKey(sortBy, COMPANY_SORT_KEYS);
+  const direction = sortDir === "asc" ? asc : desc;
+  const orderBy = key ? direction(SORT_COLUMNS[key]) : desc(companies.createdAt);
 
   const data = await db
     .select()
     .from(companies)
-    .orderBy(desc(companies.createdAt))
+    .where(where)
+    .orderBy(orderBy)
     .limit(limit)
     .offset(offset);
 
   return {
     data,
     total,
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.max(1, Math.ceil(total / limit)),
   };
 }
 

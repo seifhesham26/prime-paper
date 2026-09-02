@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { deliveries, deliveryItems, payments, companies, products } from "@/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, asc, or, ilike, sql } from "drizzle-orm";
 import type { z } from "zod";
 import type {
   CreateDeliverySchema,
@@ -9,6 +9,8 @@ import type {
   UpdatePaymentSchema,
 } from "./types";
 import { PAYMENT_STATUS_SQL } from "./status";
+import { likePattern, pickSortKey } from "../shared/list-query";
+import { DELIVERY_SORT_KEYS } from "./types";
 
 /** Recompute a delivery's status from its payments in one atomic statement. */
 export async function recomputeDeliveryStatus(deliveryId: string) {
@@ -21,11 +23,40 @@ export async function recomputeDeliveryStatus(deliveryId: string) {
     .where(eq(deliveries.id, deliveryId));
 }
 
-export async function findDeliveries(page = 1, limit = 10) {
+export async function findDeliveries(
+  page = 1,
+  limit = 10,
+  search?: string,
+  sortBy?: string,
+  sortDir: "asc" | "desc" = "desc",
+) {
   const offset = (page - 1) * limit;
 
-  const [totalResult] = await db.select({ count: sql`count(*)` }).from(deliveries);
+  const term = search?.trim();
+  const where = term
+    ? or(
+        ilike(companies.name, likePattern(term)),
+        ilike(deliveries.notes, likePattern(term)),
+      )
+    : undefined;
+
+  const [totalResult] = await db
+    .select({ count: sql`count(*)` })
+    .from(deliveries)
+    .leftJoin(companies, eq(deliveries.companyId, companies.id))
+    .where(where);
   const total = Number(totalResult?.count || 0);
+
+  const SORT_COLUMNS = {
+    date: deliveries.date,
+    companyName: companies.name,
+    sellingPriceEgp: deliveries.sellingPriceEgp,
+    paymentStatus: deliveries.paymentStatus,
+  } as const;
+
+  const key = pickSortKey(sortBy, DELIVERY_SORT_KEYS);
+  const direction = sortDir === "asc" ? asc : desc;
+  const orderBy = key ? direction(SORT_COLUMNS[key]) : desc(deliveries.date);
 
   const data = await db
     .select({
@@ -40,14 +71,15 @@ export async function findDeliveries(page = 1, limit = 10) {
     })
     .from(deliveries)
     .leftJoin(companies, eq(deliveries.companyId, companies.id))
-    .orderBy(desc(deliveries.date))
+    .where(where)
+    .orderBy(orderBy)
     .limit(limit)
     .offset(offset);
 
   return {
     data,
     total,
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.max(1, Math.ceil(total / limit)),
   };
 }
 

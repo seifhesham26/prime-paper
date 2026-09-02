@@ -19,6 +19,9 @@ export const productsRouter = createTRPCRouter({
     return getProductsService(
       input.page,
       input.forDropdown ? settings.dropdownListLimit : settings.pageSizeDefault,
+      input.search,
+      input.sortBy,
+      input.sortDir,
     );
   }),
 

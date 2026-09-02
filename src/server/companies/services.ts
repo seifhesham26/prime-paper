@@ -9,8 +9,14 @@ import {
 import type { z } from "zod";
 import type { CreateCompanySchema, UpdateCompanySchema } from "./types";
 
-export async function getCompaniesService(page: number, limit: number) {
-  return await findCompanies(page, limit);
+export async function getCompaniesService(
+  page: number,
+  limit: number,
+  search?: string,
+  sortBy?: string,
+  sortDir: "asc" | "desc" = "desc",
+) {
+  return await findCompanies(page, limit, search, sortBy, sortDir);
 }
 
 export async function createCompanyService(

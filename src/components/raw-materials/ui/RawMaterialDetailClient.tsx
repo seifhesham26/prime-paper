@@ -3,14 +3,19 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { localeTag } from "@/lib/format";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog,
   DialogContent,
@@ -39,9 +44,10 @@ import {
 
 export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
   const t = useTranslations("rawMaterials");
+  const tc = useTranslations("common");
   const locale = useLocale();
-  const isArabic = locale === "ar";
   const { canWrite } = useUserRole();
+  const confirm = useConfirm();
 
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [consumptionOpen, setConsumptionOpen] = useState(false);
@@ -60,6 +66,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
 
   const addReceipt = api.rawMaterials.createReceipt.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       invalidate();
       setReceiptOpen(false);
       setFormError("");
@@ -68,13 +75,17 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
   });
 
   const deleteReceipt = api.rawMaterials.deleteReceipt.useMutation({
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success(tc("deleted"));
+      invalidate();
+    },
     // Carries the "would leave a negative balance" guard to the user.
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   const addConsumption = api.rawMaterials.createConsumption.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       invalidate();
       setConsumptionOpen(false);
       setConsumeWeight("");
@@ -84,12 +95,15 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
   });
 
   const deleteConsumption = api.rawMaterials.deleteConsumption.useMutation({
-    onSuccess: invalidate,
-    onError: (err) => alert(err.message),
+    onSuccess: () => {
+      toast.success(tc("deleted"));
+      invalidate();
+    },
+    onError: (err) => toast.error(err.message),
   });
 
   const fmtDate = (d: Date | string) =>
-    new Date(d).toLocaleDateString(isArabic ? "ar-EG" : "en-US", {
+    new Date(d).toLocaleDateString(localeTag(locale), {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -97,20 +111,32 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-40" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-80 rounded-xl" />
+          <Skeleton className="h-80 rounded-xl" />
+        </div>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-        <PackageOpen className="h-12 w-12 text-muted-foreground/50" />
-        <Button variant="outline" asChild>
-          <Link href="/raw-materials">{t("backToMaterials")}</Link>
-        </Button>
-      </div>
+      <EmptyState
+        icon={PackageOpen}
+        title={t("notFound")}
+        action={
+          <Button variant="outline" asChild>
+            <Link href="/raw-materials">{t("backToMaterials")}</Link>
+          </Button>
+        }
+      />
     );
   }
 
@@ -139,6 +165,26 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
     });
   };
 
+  const handleDeleteReceipt = async (r: (typeof data.receipts)[number]) => {
+    const ok = await confirm({
+      title: t("confirmDelete"),
+      description: `${fmtDate(r.dateReceived)} — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deleteReceipt.mutate({ id: r.id });
+  };
+
+  const handleDeleteConsumption = async (c: (typeof data.consumptions)[number]) => {
+    const ok = await confirm({
+      title: t("confirmDelete"),
+      description: `${fmtDate(c.date)} — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deleteConsumption.mutate({ id: c.id });
+  };
+
   const balance = Number(data.balanceTons);
   const today = new Date().toISOString().split("T")[0];
 
@@ -146,8 +192,8 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
     <div className="space-y-6 animate-in fade-in duration-500">
       <Button variant="ghost" asChild className="gap-2 hover:bg-muted/50 transition-colors">
         <Link href="/raw-materials">
-          <ArrowRight className="h-4 w-4 rtl:hidden" />
-          <ArrowLeft className="h-4 w-4 hidden rtl:block" />
+          <ArrowLeft className="h-4 w-4 rtl:hidden" />
+          <ArrowRight className="hidden h-4 w-4 rtl:block" />
           {t("backToMaterials")}
         </Link>
       </Button>
@@ -163,7 +209,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
           {
             label: t("balance"),
             value: `${balance.toLocaleString()} ${t("tons")}`,
-            tone: balance > 0 ? "text-emerald-600 dark:text-emerald-500" : "text-muted-foreground",
+            tone: balance > 0 ? "text-status-paid" : "text-muted-foreground",
           },
           {
             label: t("avgCostPerTon"),
@@ -171,7 +217,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
             tone: "",
           },
         ].map((card) => (
-          <Card key={card.label} className="border-0 shadow-md bg-card/50">
+          <Card key={card.label} className="shadow-md">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground font-medium">
                 {card.label}
@@ -188,7 +234,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Receipts */}
-        <Card className="border-0 shadow-md overflow-hidden bg-card/50">
+        <Card className="shadow-md overflow-hidden">
           <CardHeader className="bg-muted/30 pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -297,11 +343,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                              onClick={() => {
-                                if (confirm(t("confirmDelete"))) {
-                                  deleteReceipt.mutate({ id: r.id });
-                                }
-                              }}
+                              onClick={() => handleDeleteReceipt(r)}
                               disabled={deleteReceipt.isPending}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -318,7 +360,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
         </Card>
 
         {/* Consumptions */}
-        <Card className="border-0 shadow-md overflow-hidden bg-card/50">
+        <Card className="shadow-md overflow-hidden">
           <CardHeader className="bg-muted/30 pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -437,7 +479,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
                           {Number(c.weightTons).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-muted-foreground max-w-[150px] truncate">
-                          {c.notes || "-"}
+                          {c.notes || "—"}
                         </TableCell>
                         {canWrite && (
                           <TableCell>
@@ -445,11 +487,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                              onClick={() => {
-                                if (confirm(t("confirmDelete"))) {
-                                  deleteConsumption.mutate({ id: c.id });
-                                }
-                              }}
+                              onClick={() => handleDeleteConsumption(c)}
                               disabled={deleteConsumption.isPending}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -468,7 +506,7 @@ export function RawMaterialDetailClient({ typeId }: { typeId: string }) {
 
       {/* Rolls produced — informational. Consumption is recorded by hand, so
           this is where a mismatch between the two becomes visible. */}
-      <Card className="border-0 shadow-md overflow-hidden bg-card/50">
+      <Card className="shadow-md overflow-hidden">
         <CardHeader className="bg-muted/30">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Factory className="h-5 w-5 text-muted-foreground" />

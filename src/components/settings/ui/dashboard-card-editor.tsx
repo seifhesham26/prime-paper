@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,8 +90,10 @@ const emptyForm: CardForm = {
 
 export function DashboardCardEditor() {
   const t = useTranslations("settings");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const isArabic = locale === "ar";
+  const confirm = useConfirm();
 
   const { data: cards, isLoading } = api.settings.getCards.useQuery();
   const { data: variables } = api.analytics.getEquationVariables.useQuery();
@@ -100,26 +104,36 @@ export function DashboardCardEditor() {
       utils.settings.getCards.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
+  // Shared by the create/edit dialog's submit AND by the silent
+  // toggle-visibility control. The dialog path shows its own success toast
+  // explicitly in handleSubmit; toggling visibility is already visible in
+  // the row (it greys out), so it stays quiet on success and only surfaces
+  // an error toast if the write fails.
   const updateMutation = api.settings.updateCard.useMutation({
     onSuccess: () => {
       utils.settings.getCards.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
   const deleteMutation = api.settings.deleteCard.useMutation({
     onSuccess: () => {
+      toast.success(tc("deleted"));
       utils.settings.getCards.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
+    onError: (err) => toast.error(err.message),
   });
+  // Reordering is already visible as the row moving; a toast on every
+  // up/down click would be noise, especially when clicked repeatedly.
   const reorderMutation = api.settings.reorderCards.useMutation({
     onSuccess: () => {
       utils.settings.getCards.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
+    onError: (err) => toast.error(err.message),
   });
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -159,6 +173,7 @@ export function DashboardCardEditor() {
           sortOrder: cards?.length || 0,
         });
       }
+      toast.success(tc("saved"));
       setDialogOpen(false);
     } catch {
       // Rejected by equation validation; onError has already reported it and
@@ -168,11 +183,17 @@ export function DashboardCardEditor() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t("confirmDeleteCard"))) return;
-    setDeletingId(id);
+  const handleDelete = async (card: NonNullable<typeof cards>[number]) => {
+    const ok = await confirm({
+      title: t("confirmDeleteCard"),
+      description: `${isArabic ? card.titleAr : card.title} — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (!ok) return;
+    setDeletingId(card.id);
     try {
-      await deleteMutation.mutateAsync({ id });
+      await deleteMutation.mutateAsync({ id: card.id });
     } finally {
       setDeletingId(null);
     }
@@ -269,7 +290,7 @@ export function DashboardCardEditor() {
           {cards.map((card, index) => (
             <Card
               key={card.id}
-              className={`border-0 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md ${
+              className={`shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md ${
                 !card.visible ? "opacity-60" : ""
               }`}
             >
@@ -355,7 +376,7 @@ export function DashboardCardEditor() {
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(card.id)}
+                    onClick={() => handleDelete(card)}
                     disabled={deletingId === card.id}
                   >
                     {deletingId === card.id ? (

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { ScrollText, Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export function SignupClient() {
   const t = useTranslations("auth");
@@ -50,8 +51,11 @@ export function SignupClient() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background via-accent/30 to-background p-4 animate-in fade-in duration-500">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
+    <div className="relative flex min-h-screen items-center justify-center bg-linear-to-br from-background via-accent/30 to-background p-4 animate-in fade-in duration-500">
+      <div className="absolute end-4 top-4">
+        <ThemeToggle />
+      </div>
+      <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center space-y-4 pb-2">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
             <ScrollText className="h-8 w-8" />

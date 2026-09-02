@@ -50,7 +50,7 @@ export function UserSettingsClient() {
 
   if (isSessionLoading) {
     return (
-      <Card className="border-0 shadow-md bg-card/50">
+      <Card className="shadow-md">
         <CardContent className="h-[200px] flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
         </CardContent>
@@ -60,7 +60,7 @@ export function UserSettingsClient() {
 
   if (!session?.user) {
     return (
-      <Card className="border-0 shadow-md bg-card/50">
+      <Card className="shadow-md">
         <CardContent className="h-[200px] flex items-center justify-center text-muted-foreground">
           {t("unableToLoadProfile")}
         </CardContent>
@@ -70,7 +70,7 @@ export function UserSettingsClient() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-0 shadow-md bg-card/50">
+      <Card className="shadow-md">
         <CardHeader className="bg-muted/30 border-b border-muted">
           <CardTitle className="flex items-center gap-2 text-lg">
             <User className="h-5 w-5 text-muted-foreground" />
@@ -98,7 +98,7 @@ export function UserSettingsClient() {
         </CardContent>
       </Card>
 
-      <Card className="border-0 shadow-md bg-card/50">
+      <Card className="shadow-md">
         <CardHeader className="bg-muted/30 border-b border-muted">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Lock className="h-5 w-5 text-muted-foreground" />
@@ -146,7 +146,7 @@ export function UserSettingsClient() {
             )}
 
             <Button type="submit" disabled={loading} className="shadow-sm hover:shadow-md transition-all">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin rtl:ml-2 rtl:mr-0" />}
+              {loading && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               {t("updatePassword")}
             </Button>
           </form>

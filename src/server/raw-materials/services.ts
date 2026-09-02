@@ -42,8 +42,14 @@ async function requireTotals(typeId: string) {
 }
 
 // ─── Types ───────────────────────────────────────────────
-export async function getTypesService(page: number, limit: number) {
-  return findTypes(page, limit);
+export async function getTypesService(
+  page: number,
+  limit: number,
+  search?: string,
+  sortBy?: string,
+  sortDir: "asc" | "desc" = "desc",
+) {
+  return findTypes(page, limit, search, sortBy, sortDir);
 }
 
 export async function getTypeByIdService(id: string) {

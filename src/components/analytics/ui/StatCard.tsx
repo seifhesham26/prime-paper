@@ -35,7 +35,7 @@ export function StatCard({
   const gradientClass = gradient.startsWith("bg-") ? gradient : `bg-linear-to-r ${gradient}`;
 
   return (
-    <Card className="group overflow-hidden border-0 shadow-md hover:-translate-y-1 transition-all duration-300 hover:shadow-lg dark:bg-card/50">
+    <Card className="group overflow-hidden shadow-md hover:-translate-y-1 transition-all duration-300 hover:shadow-lg">
       <div className={`h-1 w-full ${gradientClass}`} />
       <CardHeader className="flex flex-row items-center gap-3 pb-2">
         <div

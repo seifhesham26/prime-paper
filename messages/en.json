@@ -13,7 +13,9 @@
     "logout": "Logout",
     "invite": "Invite User",
     "brandName": "Prime Paper",
-    "brandSub": "Factory Manager"
+    "brandSub": "Factory Manager",
+    "account": "Account",
+    "role": "Role"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -82,10 +84,13 @@
     "noConsumptions": "No consumption recorded",
     "noLinkedProducts": "No rolls linked to this material",
     "backToMaterials": "Materials",
+    "materialDetail": "Material Detail",
+    "notFound": "Material not found",
     "materialNamePlaceholder": "e.g. Imported - Turkey",
     "dateProduced": "Date Produced",
     "dimensions": "Dimensions",
-    "quantity": "Quantity"
+    "quantity": "Quantity",
+    "searchPlaceholder": "Search materials…"
   },
   "products": {
     "title": "Products",
@@ -105,7 +110,8 @@
     "noData": "No products yet",
     "emptyStateDesc": "Add your first product to inventory.",
     "selectRawMaterial": "Select Raw Material",
-    "confirmDelete": "Are you sure you want to delete this product?"
+    "confirmDelete": "Are you sure you want to delete this product?",
+    "searchPlaceholder": "Search by material or notes…"
   },
   "companies": {
     "title": "Companies",
@@ -122,7 +128,8 @@
     "cancel": "Cancel",
     "noData": "No companies yet",
     "emptyStateDesc": "Add your first company to get started.",
-    "confirmDelete": "Are you sure you want to delete this company?"
+    "confirmDelete": "Are you sure you want to delete this company?",
+    "searchPlaceholder": "Search by name or contact…"
   },
   "deliveries": {
     "title": "Deliveries",
@@ -146,10 +153,12 @@
     "cancel": "Cancel",
     "noData": "No deliveries yet",
     "emptyStateDesc": "Create your first delivery to get started.",
+    "searchPlaceholder": "Search by company or notes…",
     "emptyItems": "No products added to this delivery yet.",
     "emptyPayments": "No payments recorded.",
     "deliveryNotFound": "Delivery not found",
     "backToDeliveries": "Back to Deliveries",
+    "deliveryDetail": "Delivery Detail",
     "payments": "Payments",
     "addPayment": "Add Payment",
     "amount": "Amount (EGP)",
@@ -183,6 +192,10 @@
   "settings": {
     "title": "Settings",
     "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
     "arabic": "العربية",
     "english": "English",
     "account": "Account",
@@ -278,6 +291,25 @@
     "page": "Page",
     "egp": "EGP",
     "tons": "Tons",
-    "kg": "kg"
+    "kg": "kg",
+    "saved": "Saved",
+    "deleted": "Deleted",
+    "somethingWentWrong": "Something went wrong",
+    "confirmTitle": "Are you sure?",
+    "confirmDeleteDescription": "This cannot be undone.",
+    "delete": "Delete",
+    "sortAscending": "Sort ascending",
+    "sortDescending": "Sort descending",
+    "clearSort": "Clear sort",
+    "view": "View",
+    "edit": "Edit"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again.",
+    "retry": "Try again",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "The page you're looking for doesn't exist.",
+    "goToDashboard": "Go to dashboard"
   }
 }

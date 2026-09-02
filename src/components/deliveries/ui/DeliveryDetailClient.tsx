@@ -3,15 +3,20 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
+import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { localeTag } from "@/lib/format";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Money } from "@/components/ui/money";
 import {
   Dialog,
   DialogContent,
@@ -28,27 +33,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowRight, ArrowLeft, Plus, CreditCard, Loader2, PackageOpen, Trash2 } from "lucide-react";
-
-function PaymentBadge({ status }: { status: string | null }) {
-  const t = useTranslations("deliveries");
-  const fallbackStatus = status || "unpaid";
-  const variants: Record<string, "default" | "secondary" | "destructive"> = {
-    paid: "default",
-    partial: "secondary",
-    unpaid: "destructive",
-  };
-  return (
-    <Badge variant={variants[fallbackStatus]} className="capitalize">
-      {t(fallbackStatus)}
-    </Badge>
-  );
-}
+import { PaymentBadge } from "@/components/deliveries/ui/payment-badge";
 
 export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
   const t = useTranslations("deliveries");
+  const tc = useTranslations("common");
   const locale = useLocale();
-  const isArabic = locale === "ar";
   const { canWrite } = useUserRole();
+  const confirm = useConfirm();
   const [paymentOpen, setPaymentOpen] = useState(false);
 
   const utils = api.useUtils();
@@ -63,35 +55,50 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
 
   const addPaymentMutation = api.deliveries.addPayment.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       invalidate();
       setPaymentOpen(false);
     },
-    onError: (err) => alert(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   // Deleting a payment recomputes the delivery's status server-side.
   const deletePaymentMutation = api.deliveries.deletePayment.useMutation({
-    onSuccess: invalidate,
-    onError: (err) => alert(err.message),
+    onSuccess: () => {
+      toast.success(tc("deleted"));
+      invalidate();
+    },
+    onError: (err) => toast.error(err.message),
   });
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-40" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-80 rounded-xl" />
+          <Skeleton className="h-80 rounded-xl" />
+        </div>
       </div>
     );
   }
 
   if (!delivery) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-        <PackageOpen className="h-12 w-12 text-muted-foreground/50" />
-        <p className="text-lg text-muted-foreground">{t("deliveryNotFound")}</p>
-        <Button variant="outline" asChild>
-          <Link href="/deliveries">{t("backToDeliveries")}</Link>
-        </Button>
-      </div>
+      <EmptyState
+        icon={PackageOpen}
+        title={t("deliveryNotFound")}
+        action={
+          <Button variant="outline" asChild>
+            <Link href="/deliveries">{t("backToDeliveries")}</Link>
+          </Button>
+        }
+      />
     );
   }
 
@@ -107,19 +114,29 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
     });
   };
 
+  const handleDeletePayment = async (p: (typeof delivery.payments)[number]) => {
+    const ok = await confirm({
+      title: t("confirmDeletePayment"),
+      description: `${Number(p.amountEgp).toLocaleString()} EGP — ${tc("confirmDeleteDescription")}`,
+      confirmLabel: tc("delete"),
+      destructive: true,
+    });
+    if (ok) deletePaymentMutation.mutate({ id: p.id });
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <Button variant="ghost" asChild className="gap-2 hover:bg-muted/50 transition-colors">
         <Link href="/deliveries">
-          <ArrowRight className="h-4 w-4 rtl:hidden" />
-          <ArrowLeft className="h-4 w-4 ltr:hidden" />
+          <ArrowLeft className="h-4 w-4 rtl:hidden" />
+          <ArrowRight className="hidden h-4 w-4 rtl:block" />
           {t("title")}
         </Link>
       </Button>
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-0 shadow-md bg-card/50">
+        <Card className="shadow-md">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground font-medium">
               {t("company")}
@@ -134,31 +151,31 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-md bg-card/50">
+        <Card className="shadow-md">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground font-medium">
               {t("sellingPrice")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold tracking-tight" dir="ltr">
-              {Number(delivery.sellingPriceEgp).toLocaleString()} EGP
+            <p className="text-2xl font-bold tracking-tight">
+              <Money value={delivery.sellingPriceEgp} />
             </p>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-md bg-card/50">
+        <Card className="shadow-md">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground font-medium">
               {t("totalPaid")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-500" dir="ltr">
-              {delivery.totalPaid.toLocaleString()} EGP
+            <p className="text-2xl font-bold tracking-tight text-status-paid">
+              <Money value={delivery.totalPaid} />
             </p>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-md bg-card/50">
+        <Card className="shadow-md">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground font-medium">
               {t("remaining")}
@@ -167,11 +184,10 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
           <CardContent>
             <p
               className={`text-2xl font-bold tracking-tight ${
-                delivery.remaining > 0 ? "text-rose-600 dark:text-rose-500" : "text-emerald-600 dark:text-emerald-500"
+                delivery.remaining > 0 ? "text-status-unpaid" : "text-status-paid"
               }`}
-              dir="ltr"
             >
-              {delivery.remaining.toLocaleString()} EGP
+              <Money value={delivery.remaining} />
             </p>
           </CardContent>
         </Card>
@@ -179,7 +195,7 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Delivery Items */}
-        <Card className="border-0 shadow-md overflow-hidden bg-card/50">
+        <Card className="shadow-md overflow-hidden">
           <CardHeader className="bg-muted/30">
             <CardTitle className="flex items-center gap-2 text-lg">
               <PackageOpen className="h-5 w-5 text-muted-foreground" />
@@ -219,7 +235,7 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
         </Card>
 
         {/* Payments */}
-        <Card className="border-0 shadow-md overflow-hidden bg-card/50">
+        <Card className="shadow-md overflow-hidden">
           <CardHeader className="bg-muted/30 pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -303,12 +319,12 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
                   {delivery.payments.map((p) => (
                     <TableRow key={p.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell dir="ltr" className="text-start text-muted-foreground whitespace-nowrap">
-                        {new Date(p.date).toLocaleDateString(isArabic ? "ar-EG" : "en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {new Date(p.date).toLocaleDateString(localeTag(locale), { year: 'numeric', month: 'short', day: 'numeric' })}
                       </TableCell>
-                      <TableCell className="text-center font-medium text-emerald-600 dark:text-emerald-500" dir="ltr">
-                        {Number(p.amountEgp).toLocaleString()} EGP
+                      <TableCell className="text-center font-medium text-status-paid">
+                        <Money value={p.amountEgp} />
                       </TableCell>
-                      <TableCell className="text-muted-foreground max-w-[150px] truncate">{p.notes || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground max-w-[150px] truncate">{p.notes || "—"}</TableCell>
                       {canWrite && (
                         <TableCell>
                           <Button
@@ -316,11 +332,7 @@ export function DeliveryDetailClient({ deliveryId }: { deliveryId: string }) {
                             size="icon"
                             className="h-8 w-8 text-destructive hover:bg-destructive/10"
                             title={t("deletePayment")}
-                            onClick={() => {
-                              if (confirm(t("confirmDeletePayment"))) {
-                                deletePaymentMutation.mutate({ id: p.id });
-                              }
-                            }}
+                            onClick={() => handleDeletePayment(p)}
                             disabled={deletePaymentMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />

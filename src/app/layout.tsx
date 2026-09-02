@@ -3,6 +3,8 @@ import { Cairo } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { TRPCReactProvider } from "@/trpc/react";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
 
@@ -26,11 +28,19 @@ export default async function RootLayout({
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
-    <html lang={locale} dir={dir}>
+    <html lang={locale} dir={dir} suppressHydrationWarning>
       <body className={`${cairo.variable} font-sans antialiased`}>
-        <NextIntlClientProvider messages={messages}>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
-        </NextIntlClientProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <NextIntlClientProvider messages={messages}>
+            <TRPCReactProvider>{children}</TRPCReactProvider>
+            <Toaster />
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

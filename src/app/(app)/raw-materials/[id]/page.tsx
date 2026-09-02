@@ -12,7 +12,10 @@ export default async function RawMaterialDetailPage({
 
   return (
     <>
-      <Header title={t("title")} />
+      <Header
+        title={t("materialDetail")}
+        breadcrumb={{ href: "/raw-materials", label: t("title") }}
+      />
       <div className="p-6">
         <RawMaterialDetailClient typeId={id} />
       </div>

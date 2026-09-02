@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { moneySchema, positiveMoneySchema } from "@/server/shared/validation";
+import { listQueryFields } from "../shared/list-query";
 
 const DeliveryItemSchema = z.object({
   productId: z.string().uuid(),
@@ -34,9 +35,15 @@ export const UpdatePaymentSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const GetDeliveriesSchema = z.object({
-  page: z.number().int().min(1).default(1),
-});
+export const DELIVERY_SORT_KEYS = [
+  "date",
+  "companyName",
+  "sellingPriceEgp",
+  "paymentStatus",
+] as const;
+export type DeliverySortKey = (typeof DELIVERY_SORT_KEYS)[number];
+
+export const GetDeliveriesSchema = z.object(listQueryFields(DELIVERY_SORT_KEYS));
 
 export const DeleteDeliverySchema = z.object({
   id: z.string().uuid(),

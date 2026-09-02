@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import { UserPlus, Loader2, Check, ShieldCheck, Eye, KeyRound } from "lucide-rea
 
 export function InviteClient() {
   const t = useTranslations("invite");
+  const tc = useTranslations("common");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,6 +34,7 @@ export function InviteClient() {
   // { error } rather than throwing, so failures were reported as successes.
   const inviteMutation = api.users.invite.useMutation({
     onSuccess: () => {
+      toast.success(tc("saved"));
       setSuccess(true);
       setError("");
       setName("");
@@ -42,6 +45,7 @@ export function InviteClient() {
     onError: (err) => {
       setSuccess(false);
       setError(err.message || t("error"));
+      toast.error(err.message || t("error"));
     },
   });
 
@@ -66,7 +70,7 @@ export function InviteClient() {
         </TabsList>
 
         <TabsContent value="create" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-          <Card className="border-0 shadow-xl bg-background/60 backdrop-blur-sm">
+          <Card className="shadow-xl">
             <CardHeader className="bg-muted/30 border-b border-muted">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <UserPlus className="h-5 w-5 text-muted-foreground" />
@@ -170,10 +174,18 @@ export function InviteClient() {
 
 function PasswordResetsTab() {
   const t = useTranslations("invite");
+  const tc = useTranslations("common");
   const { data: requests, isLoading } = api.users.getPendingResets.useQuery();
   const utils = api.useUtils();
   const resolveMutation = api.users.resolveReset.useMutation({
-    onSuccess: () => utils.users.getPendingResets.invalidate()
+    onSuccess: () => {
+      toast.success(tc("saved"));
+      utils.users.getPendingResets.invalidate();
+    },
+    // The password was already changed via authClient.admin.updateUser above
+    // by this point; a failure here only means the ticket didn't get marked
+    // resolved, but that's still worth telling the admin so they can retry.
+    onError: (err) => toast.error(err.message),
   });
 
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -181,16 +193,19 @@ function PasswordResetsTab() {
 
   const handleResolve = async (id: string, email: string) => {
     const newPassword = passwords[id];
-    if (!newPassword || newPassword.length < 8) return alert(t("passwordMinLength"));
+    if (!newPassword || newPassword.length < 8) {
+      toast.error(t("passwordMinLength"));
+      return;
+    }
     setLoadingId(id);
-    
+
     try {
       // Look up user by email via targeted server-side query
       const found = await utils.users.getUserIdByEmail.fetch({ email });
 
       if (!found) {
         // Resolving here would close the ticket without changing any password.
-        alert(t("resetFailed") + ": " + t("noAccountForEmail"));
+        toast.error(t("resetFailed") + ": " + t("noAccountForEmail"));
         return;
       }
 
@@ -203,14 +218,14 @@ function PasswordResetsTab() {
       });
 
       if (res.error) {
-        alert(t("resetFailed") + ": " + (res.error.message ?? ""));
+        toast.error(t("resetFailed") + ": " + (res.error.message ?? ""));
         return;
       }
 
       resolveMutation.mutate({ id });
     } catch (err) {
       console.error(err);
-      alert(t("resetFailed") + ": " + (err instanceof Error ? err.message : ""));
+      toast.error(t("resetFailed") + ": " + (err instanceof Error ? err.message : ""));
     } finally {
       setLoadingId(null);
     }
