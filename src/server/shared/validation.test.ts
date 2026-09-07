@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decimalString, toUnits } from "./validation";
+import { decimalString, gsmSchema, percentSchema, toUnits } from "./validation";
 
 describe("toUnits", () => {
   it("scales a decimal string to an exact integer", () => {
@@ -49,5 +49,34 @@ describe("decimalString", () => {
 
   it("trims surrounding whitespace", () => {
     expect(money.safeParse("  12.50  ").success).toBe(true);
+  });
+});
+
+describe("gsmSchema", () => {
+  it("accepts a positive grammage", () => {
+    expect(gsmSchema.safeParse("80").success).toBe(true);
+    expect(gsmSchema.safeParse("80.50").success).toBe(true);
+  });
+
+  it("rejects zero and negatives", () => {
+    expect(gsmSchema.safeParse("0").success).toBe(false);
+    expect(gsmSchema.safeParse("-80").success).toBe(false);
+  });
+
+  it("rejects more than 2 decimal places", () => {
+    expect(gsmSchema.safeParse("80.123").success).toBe(false);
+  });
+});
+
+describe("percentSchema", () => {
+  it("accepts zero through one hundred", () => {
+    expect(percentSchema.safeParse("0").success).toBe(true);
+    expect(percentSchema.safeParse("7.5").success).toBe(true);
+    expect(percentSchema.safeParse("100").success).toBe(true);
+  });
+
+  it("rejects negatives and anything above one hundred", () => {
+    expect(percentSchema.safeParse("-1").success).toBe(false);
+    expect(percentSchema.safeParse("100.01").success).toBe(false);
   });
 });

@@ -60,3 +60,9 @@ export const positiveMoneySchema = decimalString({ scale: 2, min: 0, minExclusiv
 
 /** Product dimensions — decimal(10,2), must be positive. */
 export const dimensionSchema = decimalString({ scale: 2, min: 0, minExclusive: true });
+
+/** Paper grammage in g/m² — decimal(10,2), must be positive. */
+export const gsmSchema = decimalString({ scale: 2, min: 0, minExclusive: true });
+
+/** A percentage 0–100 — decimal(5,2). Zero is meaningful, so it is allowed. */
+export const percentSchema = decimalString({ scale: 2, min: 0, max: 100 });
