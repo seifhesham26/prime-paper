@@ -142,8 +142,20 @@ nowhere else:
 - `rawMaterialTypeId` absent — no row written; the product stays informational,
   exactly as today
 
-Product write and consumption write share one transaction, so a product can
-never exist without its consumption row.
+**Atomicity uses `db.batch()`, not `db.transaction()`.** The project runs
+`drizzle-orm/neon-http`, whose session throws `"No transactions support in
+neon-http driver"`. `db.batch()` is supported and sends its statements through
+one `client.transaction(...)` HTTP call, so it is genuinely atomic — but every
+statement must be built up front, which forbids using an id returned by an
+earlier statement. The product id is therefore generated in application code
+with `crypto.randomUUID()` and passed explicitly to both inserts, making them
+independent statements that can be batched. A product can then never exist
+without its consumption row.
+
+Updates delete and reinsert the linked consumption row inside the same batch
+rather than reading it first, which keeps the operation deterministic and
+idempotent. Deletes batch the consumption removal *before* the product removal,
+since the consumption row holds the foreign key.
 
 **Negative stock is permitted by default.** Auto-consumption naturally routes
 through `canConsume`, which would refuse production exceeding stock. That is
