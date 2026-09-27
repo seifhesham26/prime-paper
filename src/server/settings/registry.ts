@@ -84,6 +84,24 @@ export const SETTINGS_REGISTRY: SettingDefinition[] = [
     label: "Allow public registration",
     labelAr: "السماح بالتسجيل العام",
   },
+  {
+    key: "default_waste_percent",
+    type: "int",
+    category: "operational",
+    min: 0,
+    max: 50,
+    default: 5,
+    label: "Default waste percent",
+    labelAr: "نسبة الهالك الافتراضية",
+  },
+  {
+    key: "allow_negative_stock",
+    type: "boolean",
+    category: "operational",
+    default: "true",
+    label: "Allow negative stock",
+    labelAr: "السماح بالرصيد السالب",
+  },
 ];
 
 export const SETTINGS_BY_KEY = new Map(SETTINGS_REGISTRY.map((s) => [s.key, s]));
@@ -94,4 +112,6 @@ export type SettingsMap = {
   dashboardRecentDeliveries: number;
   dashboardTopUnpaid: number;
   dashboardChartMonths: number;
+  defaultWastePercent: number;
+  allowNegativeStock: boolean;
 };

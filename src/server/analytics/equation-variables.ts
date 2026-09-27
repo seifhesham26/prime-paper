@@ -71,7 +71,11 @@ const RESOLVERS: Record<string, () => Promise<number>> = {
     ),
   "SUM(products.weight_kg)": () =>
     scalar(
-      db.select({ v: sql<string>`COALESCE(SUM(${products.weightKg}), 0)` }).from(products),
+      db
+        .select({
+          v: sql<string>`COALESCE(SUM(${products.weightKg} * ${products.quantity}), 0)`,
+        })
+        .from(products),
     ),
   "COUNT(products)": () =>
     scalar(db.select({ v: sql<string>`COUNT(*)` }).from(products)),

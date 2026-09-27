@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dimensionSchema } from "@/server/shared/validation";
+import { dimensionSchema, gsmSchema } from "@/server/shared/validation";
 import { listQueryFields } from "../shared/list-query";
 
 export const CreateProductSchema = z.object({
@@ -7,6 +7,7 @@ export const CreateProductSchema = z.object({
   dateProduced: z.date(),
   lengthM: dimensionSchema,
   widthCm: dimensionSchema,
+  gsm: gsmSchema.optional(),
   weightKg: dimensionSchema,
   quantity: z.number().int().positive(),
   notes: z.string().optional(),
@@ -38,6 +39,7 @@ export type Product = {
   dateProduced: Date;
   lengthM: string;
   widthCm: string;
+  gsm: string | null;
   weightKg: string;
   quantity: number;
   notes: string | null;

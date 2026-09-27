@@ -35,6 +35,7 @@ type TypeRow = {
   id: string;
   name: string;
   notes: string | null;
+  wastePercent: string | null;
   receivedTons: string;
   consumedTons: string;
   balanceTons: string;
@@ -106,6 +107,7 @@ export function RawMaterialTypesClient() {
     const formData = new FormData(e.currentTarget);
     const payload = {
       name: formData.get("name") as string,
+      wastePercent: (formData.get("wastePercent") as string) || undefined,
       notes: (formData.get("notes") as string) || undefined,
     };
 
@@ -163,17 +165,26 @@ export function RawMaterialTypesClient() {
       header: t("balance"),
       align: "center",
       sortKey: "balanceTons",
-      cell: (row) => (
-        <Measure
-          value={row.balanceTons}
-          unit="tons"
-          className={
-            Number(row.balanceTons) > 0
-              ? "font-semibold text-status-paid"
-              : "font-semibold text-muted-foreground"
-          }
-        />
-      ),
+      cell: (row) =>
+        Number(row.balanceTons) < 0 ? (
+          <span className="text-destructive font-semibold" title={t("negativeBalance")}>
+            <Measure
+              value={row.balanceTons}
+              unit="tons"
+              className="text-destructive font-semibold"
+            />
+          </span>
+        ) : (
+          <Measure
+            value={row.balanceTons}
+            unit="tons"
+            className={
+              Number(row.balanceTons) > 0
+                ? "font-semibold text-status-paid"
+                : "font-semibold text-muted-foreground"
+            }
+          />
+        ),
     },
     {
       id: "avgCost",
@@ -246,6 +257,23 @@ export function RawMaterialTypesClient() {
                       required
                       className="bg-muted/50"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wastePercent" className="text-muted-foreground">
+                      {t("wastePercent")}
+                    </Label>
+                    <Input
+                      id="wastePercent"
+                      name="wastePercent"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      defaultValue={editItem?.wastePercent ?? ""}
+                      dir="ltr"
+                      className="bg-muted/50 focus-visible:ring-primary/50"
+                    />
+                    <p className="text-xs text-muted-foreground">{t("wastePercentHint")}</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="notes" className="text-muted-foreground">

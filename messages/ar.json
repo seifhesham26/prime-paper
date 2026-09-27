@@ -90,7 +90,10 @@
     "dateProduced": "تاريخ الإنتاج",
     "dimensions": "الأبعاد",
     "quantity": "الكمية",
-    "searchPlaceholder": "ابحث في المواد…"
+    "searchPlaceholder": "ابحث في المواد…",
+    "wastePercent": "نسبة الهالك %",
+    "wastePercentHint": "الفاقد المضاف إلى الاستهلاك. اتركه فارغًا لاستخدام الافتراضي.",
+    "negativeBalance": "رصيد سالب — المسجل كمستهلك أكبر مما تم استلامه."
   },
   "products": {
     "title": "المنتجات",
@@ -99,6 +102,10 @@
     "rawMaterial": "المادة الخام",
     "lengthM": "الطول (م)",
     "widthCm": "العرض (سم)",
+    "gsm": "الجرامات (جم/م²)",
+    "computedWeight": "المحسوب: {value} كجم",
+    "useComputed": "استخدم المحسوب",
+    "computedWeightHint": "محسوب من الطول والعرض والجرامات. يمكنك تعديله حسب قراءة الميزان.",
     "weightKg": "الوزن (كجم)",
     "quantity": "الكمية",
     "notes": "ملاحظات",

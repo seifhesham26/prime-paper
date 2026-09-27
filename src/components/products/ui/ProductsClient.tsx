@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { useUserRole } from "@/hooks/use-role";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { computeWeightKg } from "@/server/products/production";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,19 @@ export function ProductsClient() {
   const [editItem, setEditItem] = useState<Product | null>(null);
   const [selectedMaterialType, setSelectedMaterialType] = useState<string>("");
 
+  const [lengthM, setLengthM] = useState("");
+  const [widthCm, setWidthCm] = useState("");
+  const [gsm, setGsm] = useState("");
+  const [weightKg, setWeightKg] = useState("");
+
+  const computedWeight = useMemo(() => {
+    try {
+      return computeWeightKg(lengthM, widthCm, gsm);
+    } catch {
+      return null;
+    }
+  }, [lengthM, widthCm, gsm]);
+
   const utils = api.useUtils();
 
   const searchParams = useSearchParams();
@@ -73,6 +87,9 @@ export function ProductsClient() {
     onSuccess: () => {
       toast.success(tc("saved"));
       utils.products.getAll.invalidate();
+      utils.rawMaterials.getAll.invalidate();
+      utils.analytics.getDashboardStats.invalidate();
+      utils.analytics.evaluateCards.invalidate();
       setOpen(false);
       resetForm();
     },
@@ -83,6 +100,9 @@ export function ProductsClient() {
     onSuccess: () => {
       toast.success(tc("saved"));
       utils.products.getAll.invalidate();
+      utils.rawMaterials.getAll.invalidate();
+      utils.analytics.getDashboardStats.invalidate();
+      utils.analytics.evaluateCards.invalidate();
       setOpen(false);
       resetForm();
     },
@@ -93,6 +113,7 @@ export function ProductsClient() {
     onSuccess: () => {
       toast.success(tc("deleted"));
       utils.products.getAll.invalidate();
+      utils.rawMaterials.getAll.invalidate();
       utils.analytics.getDashboardStats.invalidate();
       utils.analytics.evaluateCards.invalidate();
     },
@@ -105,11 +126,19 @@ export function ProductsClient() {
   const resetForm = () => {
     setEditItem(null);
     setSelectedMaterialType("");
+    setLengthM("");
+    setWidthCm("");
+    setGsm("");
+    setWeightKg("");
   };
 
   const handleEdit = (item: Product) => {
     setEditItem(item);
     setSelectedMaterialType(item.rawMaterialTypeId || "");
+    setLengthM(item.lengthM ?? "");
+    setWidthCm(item.widthCm ?? "");
+    setGsm(item.gsm ?? "");
+    setWeightKg(item.weightKg ?? "");
     setOpen(true);
   };
 
@@ -133,9 +162,10 @@ export function ProductsClient() {
       dateProduced: new Date(dateStr),
       lengthM: formData.get("lengthM") as string,
       widthCm: formData.get("widthCm") as string,
+      gsm: (formData.get("gsm") as string) || undefined,
       weightKg: formData.get("weightKg") as string,
       quantity: parseInt(formData.get("quantity") as string),
-      notes: formData.get("notes") as string || undefined,
+      notes: (formData.get("notes") as string) || undefined,
     };
 
     if (editItem) {
@@ -280,7 +310,8 @@ export function ProductsClient() {
                         name="lengthM"
                         type="number"
                         step="0.01"
-                        defaultValue={editItem?.lengthM || ""}
+                        value={lengthM}
+                        onChange={(e) => setLengthM(e.target.value)}
                         required
                         dir="ltr"
                         className="bg-muted/50 focus-visible:ring-primary/50"
@@ -293,7 +324,8 @@ export function ProductsClient() {
                         name="widthCm"
                         type="number"
                         step="0.01"
-                        defaultValue={editItem?.widthCm || ""}
+                        value={widthCm}
+                        onChange={(e) => setWidthCm(e.target.value)}
                         required
                         dir="ltr"
                         className="bg-muted/50 focus-visible:ring-primary/50"
@@ -302,31 +334,57 @@ export function ProductsClient() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
+                      <Label htmlFor="gsm" className="text-muted-foreground">{t("gsm")}</Label>
+                      <Input
+                        id="gsm"
+                        name="gsm"
+                        type="number"
+                        step="0.01"
+                        value={gsm}
+                        onChange={(e) => setGsm(e.target.value)}
+                        dir="ltr"
+                        className="bg-muted/50 focus-visible:ring-primary/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="weightKg" className="text-muted-foreground">{t("weightKg")}</Label>
                       <Input
                         id="weightKg"
                         name="weightKg"
                         type="number"
                         step="0.01"
-                        defaultValue={editItem?.weightKg || ""}
+                        value={weightKg}
+                        onChange={(e) => setWeightKg(e.target.value)}
                         required
                         dir="ltr"
                         className="bg-muted/50 focus-visible:ring-primary/50"
                       />
+                      {computedWeight && computedWeight !== weightKg && (
+                        <p className="text-xs text-muted-foreground">
+                          {t("computedWeight", { value: computedWeight })}{" "}
+                          <button
+                            type="button"
+                            onClick={() => setWeightKg(computedWeight)}
+                            className="text-primary underline underline-offset-2"
+                          >
+                            {t("useComputed")}
+                          </button>
+                        </p>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="quantity" className="text-muted-foreground">{t("quantity")}</Label>
-                      <Input
-                        id="quantity"
-                        name="quantity"
-                        type="number"
-                        min="1"
-                        defaultValue={editItem?.quantity || 1}
-                        required
-                        dir="ltr"
-                        className="bg-muted/50 focus-visible:ring-primary/50"
-                      />
-                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity" className="text-muted-foreground">{t("quantity")}</Label>
+                    <Input
+                      id="quantity"
+                      name="quantity"
+                      type="number"
+                      min="1"
+                      defaultValue={editItem?.quantity || 1}
+                      required
+                      dir="ltr"
+                      className="bg-muted/50 focus-visible:ring-primary/50"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="notes" className="text-muted-foreground">{t("notes")}</Label>

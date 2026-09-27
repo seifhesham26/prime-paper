@@ -31,7 +31,7 @@ export const productsRouter = createTRPCRouter({
 
   update: writerProcedure
     .input(UpdateProductSchema)
-    .mutation(async ({ input }) => updateProductService(input)),
+    .mutation(async ({ input, ctx }) => updateProductService(input, ctx.session.user.id)),
 
   delete: writerProcedure
     .input(DeleteProductSchema)

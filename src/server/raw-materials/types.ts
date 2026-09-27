@@ -1,10 +1,11 @@
 import { z } from "zod";
-import { moneySchema, weightTonsSchema } from "@/server/shared/validation";
+import { moneySchema, percentSchema, weightTonsSchema } from "@/server/shared/validation";
 import { listQueryFields } from "../shared/list-query";
 
 // ─── Types (Parent Material) ─────────────────────────────
 export const CreateTypeSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
+  wastePercent: percentSchema.optional(),
   notes: z.string().optional(),
 });
 
@@ -53,6 +54,7 @@ export type RawMaterialType = {
   id: string;
   name: string;
   notes: string | null;
+  wastePercent: string | null;
   createdAt: Date;
   receivedTons: string;
   consumedTons: string;

@@ -83,6 +83,7 @@ export const rawMaterialTypes = pgTable("raw_material_types", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull().unique(),
   notes: text("notes"),
+  wastePercent: decimal("waste_percent", { precision: 5, scale: 2 }),
   createdBy: text("created_by").references(() => user.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -104,9 +105,10 @@ export const rawMaterialReceipts = pgTable("raw_material_receipts", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// ─── Raw Material Consumptions (Converted to Rolls) ──────
-// Recorded by hand when material goes into production. Nothing deducts
-// automatically — a product's weight never moves this balance.
+// ─── Raw Material Consumptions ───────────────────────────
+// Manual entries record spoilage, damaged rolls, or raw material sold on.
+// Production-sourced rows (`source: 'production'`) are written automatically
+// when a product is created/updated with a raw material type.
 export const rawMaterialConsumptions = pgTable("raw_material_consumptions", {
   id: uuid("id").defaultRandom().primaryKey(),
   typeId: uuid("type_id")
@@ -114,6 +116,10 @@ export const rawMaterialConsumptions = pgTable("raw_material_consumptions", {
     .references(() => rawMaterialTypes.id),
   date: timestamp("date").notNull(),
   weightTons: decimal("weight_tons", { precision: 10, scale: 3 }).notNull(),
+  productId: uuid("product_id").references(() => products.id),
+  source: text("source", { enum: ["manual", "production"] })
+    .notNull()
+    .default("manual"),
   notes: text("notes"),
   createdBy: text("created_by").references(() => user.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -129,6 +135,7 @@ export const products = pgTable("products", {
   dateProduced: timestamp("date_produced").notNull(),
   lengthM: decimal("length_m", { precision: 10, scale: 2 }).notNull(),
   widthCm: decimal("width_cm", { precision: 10, scale: 2 }).notNull(),
+  gsm: decimal("gsm", { precision: 10, scale: 2 }),
   weightKg: decimal("weight_kg", { precision: 10, scale: 2 }).notNull(),
   quantity: integer("quantity").notNull().default(1),
   notes: text("notes"),

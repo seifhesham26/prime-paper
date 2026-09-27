@@ -17,6 +17,13 @@ function coerce(key: string, raw: string | undefined): number {
   return n;
 }
 
+function coerceBoolean(key: string, raw: string | undefined): boolean {
+  const def = SETTINGS_BY_KEY.get(key);
+  if (!def || def.type !== "boolean") throw new Error(`Not a boolean setting: ${key}`);
+  if (raw !== "true" && raw !== "false") return def.default === "true";
+  return raw === "true";
+}
+
 /**
  * The settings the application reads, with validated fallbacks so a bad
  * stored value degrades to the default rather than breaking a page.
@@ -37,6 +44,8 @@ export async function getSettingsMap(): Promise<SettingsMap> {
       "dashboard_chart_months",
       stored.get("dashboard_chart_months"),
     ),
+    defaultWastePercent: coerce("default_waste_percent", stored.get("default_waste_percent")),
+    allowNegativeStock: coerceBoolean("allow_negative_stock", stored.get("allow_negative_stock")),
   };
 }
 
