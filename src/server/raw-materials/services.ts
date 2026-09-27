@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import type { z } from "zod";
+import { isSystemManaged } from "@/server/products/production";
 import { canConsume, costPerTon } from "./balance";
 import { toUnits } from "@/server/shared/validation";
 import {
@@ -165,6 +166,14 @@ export async function updateConsumptionService(
     throw new TRPCError({ code: "NOT_FOUND", message: "Consumption entry not found" });
   }
 
+  if (isSystemManaged(existing.source)) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message:
+        "This consumption was recorded automatically from a production run. Edit the product instead.",
+    });
+  }
+
   // Compare against the balance with this entry's own weight added back,
   // otherwise editing 5t down to 4t is measured against a balance that
   // already counts the 5t.
@@ -187,5 +196,14 @@ export async function deleteConsumptionService(id: string) {
   if (!existing) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Consumption entry not found" });
   }
+
+  if (isSystemManaged(existing.source)) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message:
+        "This consumption was recorded automatically from a production run. Edit the product instead.",
+    });
+  }
+
   return removeConsumption(id);
 }

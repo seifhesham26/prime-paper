@@ -90,6 +90,8 @@ async function seed() {
       // Without this row the toggle can never be switched on: the Settings
       // screen only edits keys that already exist. Defaults to off.
       { key: "allow_public_signup", value: "false", category: "operational" },
+      { key: "default_waste_percent", value: "5", category: "operational" },
+      { key: "allow_negative_stock", value: "true", category: "operational" },
     ])
     .onConflictDoNothing();
 

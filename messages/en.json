@@ -90,7 +90,10 @@
     "dateProduced": "Date Produced",
     "dimensions": "Dimensions",
     "quantity": "Quantity",
-    "searchPlaceholder": "Search materials…"
+    "searchPlaceholder": "Search materials…",
+    "wastePercent": "Waste %",
+    "wastePercentHint": "Trim loss added to consumption. Blank uses the system default.",
+    "negativeBalance": "Negative balance — more material recorded as used than received."
   },
   "products": {
     "title": "Products",
@@ -99,6 +102,10 @@
     "rawMaterial": "Raw Material",
     "lengthM": "Length (m)",
     "widthCm": "Width (cm)",
+    "gsm": "GSM (g/m²)",
+    "computedWeight": "Computed: {value} kg",
+    "useComputed": "Use computed",
+    "computedWeightHint": "From length, width and GSM. Override it with the scale reading.",
     "weightKg": "Weight (kg)",
     "quantity": "Quantity",
     "notes": "Notes",

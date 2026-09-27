@@ -51,6 +51,7 @@ export async function findProducts(
       dateProduced: products.dateProduced,
       lengthM: products.lengthM,
       widthCm: products.widthCm,
+      gsm: products.gsm,
       weightKg: products.weightKg,
       quantity: products.quantity,
       notes: products.notes,
@@ -80,45 +81,46 @@ export async function countProductDeliveryItems(id: string) {
   return Number(row?.count || 0);
 }
 
-export async function insertProduct(
+// ─── Batchable builders ──────────────────────────────────
+// The id is supplied by the caller rather than defaulted by Postgres, because
+// db.batch() cannot feed a returned id into a later statement in the batch.
+
+export function buildInsertProduct(
   data: z.infer<typeof CreateProductSchema>,
   userId: string,
+  id: string,
 ) {
-  const [newProduct] = await db
-    .insert(products)
-    .values({
-      rawMaterialTypeId: data.rawMaterialTypeId || null,
-      dateProduced: data.dateProduced,
-      lengthM: data.lengthM,
-      widthCm: data.widthCm,
-      weightKg: data.weightKg,
-      quantity: data.quantity,
-      notes: data.notes || null,
-      createdBy: userId,
-    })
-    .returning();
-  return newProduct;
+  return db.insert(products).values({
+    id,
+    rawMaterialTypeId: data.rawMaterialTypeId || null,
+    dateProduced: data.dateProduced,
+    lengthM: data.lengthM,
+    widthCm: data.widthCm,
+    gsm: data.gsm ?? null,
+    weightKg: data.weightKg,
+    quantity: data.quantity,
+    notes: data.notes || null,
+    createdBy: userId,
+  });
 }
 
-export async function editProduct(data: z.infer<typeof UpdateProductSchema>) {
-  const [updatedProduct] = await db
+export function buildUpdateProduct(data: z.infer<typeof UpdateProductSchema>) {
+  return db
     .update(products)
     .set({
       rawMaterialTypeId: data.rawMaterialTypeId || null,
       dateProduced: data.dateProduced,
       lengthM: data.lengthM,
       widthCm: data.widthCm,
+      gsm: data.gsm ?? null,
       weightKg: data.weightKg,
       quantity: data.quantity,
       notes: data.notes || null,
       updatedAt: new Date(),
     })
-    .where(eq(products.id, data.id))
-    .returning();
-  return updatedProduct;
+    .where(eq(products.id, data.id));
 }
 
-export async function removeProduct(id: string) {
-  await db.delete(products).where(eq(products.id, id));
-  return { success: true };
+export function buildDeleteProduct(id: string) {
+  return db.delete(products).where(eq(products.id, id));
 }

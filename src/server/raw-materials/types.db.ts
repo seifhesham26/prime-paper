@@ -87,6 +87,7 @@ export async function findTypes(
       id: rawMaterialTypes.id,
       name: rawMaterialTypes.name,
       notes: rawMaterialTypes.notes,
+      wastePercent: rawMaterialTypes.wastePercent,
       createdAt: rawMaterialTypes.createdAt,
       receivedTons: receivedSql,
       consumedTons: consumedSql,
@@ -111,6 +112,7 @@ export async function findTypeTotals(id: string) {
       receivedTons: receivedSql,
       consumedTons: consumedSql,
       totalCostEgp: totalCostSql,
+      wastePercent: rawMaterialTypes.wastePercent,
     })
     .from(rawMaterialTypes)
     .where(eq(rawMaterialTypes.id, id));
@@ -122,6 +124,7 @@ export async function findTypeTotals(id: string) {
     receivedTons: derived.receivedTons,
     consumedTons: derived.consumedTons,
     balanceTons: derived.balanceTons,
+    wastePercent: row.wastePercent,
   };
 }
 
@@ -131,6 +134,7 @@ export async function findTypeById(id: string) {
       id: rawMaterialTypes.id,
       name: rawMaterialTypes.name,
       notes: rawMaterialTypes.notes,
+      wastePercent: rawMaterialTypes.wastePercent,
       createdAt: rawMaterialTypes.createdAt,
       receivedTons: receivedSql,
       consumedTons: consumedSql,
@@ -190,18 +194,36 @@ export async function countTypeChildren(id: string) {
   };
 }
 
-export async function insertType(data: { name: string; notes?: string }, userId: string) {
+export async function insertType(
+  data: { name: string; wastePercent?: string; notes?: string },
+  userId: string,
+) {
   const [row] = await db
     .insert(rawMaterialTypes)
-    .values({ name: data.name, notes: data.notes || null, createdBy: userId })
+    .values({
+      name: data.name,
+      wastePercent: data.wastePercent ?? null,
+      notes: data.notes || null,
+      createdBy: userId,
+    })
     .returning();
   return row;
 }
 
-export async function editType(data: { id: string; name: string; notes?: string }) {
+export async function editType(data: {
+  id: string;
+  name: string;
+  wastePercent?: string;
+  notes?: string;
+}) {
   const [row] = await db
     .update(rawMaterialTypes)
-    .set({ name: data.name, notes: data.notes || null, updatedAt: new Date() })
+    .set({
+      name: data.name,
+      wastePercent: data.wastePercent ?? null,
+      notes: data.notes || null,
+      updatedAt: new Date(),
+    })
     .where(eq(rawMaterialTypes.id, data.id))
     .returning();
   return row;
